@@ -62,7 +62,33 @@ const hashPassword = async (password: string) : Promise<string> => {
     const bcrypt = require('bcrypt');
     const saltRounds = 10;
     const salt = bcrypt.genSaltSync(saltRounds);
+    Logger.info(salt);
     return bcrypt.hashSync(password, salt);
 };
 
-export { getAll, getOne, getEmails, insert, alter, remove }
+const checkPassword = async (email: string, password: string) : Promise<boolean> => {
+    const conn = await getPool().getConnection();
+    const query = 'select password from user where email = ?';
+    const [ result ] = await conn.query( query, [ email ] );
+    conn.release();
+    if (result.length === 0) {
+        return false;
+    }
+    const bcrypt = require('bcrypt');
+    return await bcrypt.compare(password, result[0].password);
+}
+
+const addAuthToken = async (email: string) : Promise<User> => {
+    const randtoken = require('rand-token');
+    const token = randtoken.generate(32);
+    const conn = await getPool().getConnection();
+    let query = 'update user set auth_token = ? where email = ?';
+    await conn.query( query, [ token, email ] );
+    query = 'select id, auth_token from user where email = ?';
+    const [ result ] = await conn.query( query, [ email ] );
+    conn.release();
+    Logger.info(result);
+    return result[0];
+}
+
+export { getAll, getOne, getEmails, insert, alter, remove, checkPassword, addAuthToken }
