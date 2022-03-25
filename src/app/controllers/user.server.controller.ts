@@ -4,11 +4,8 @@ import {Request, Response} from "express";
 
 const create = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`POST create a user with email: ${req.body.email}`)
-    for (const property of ["firstName", "lastName", "email", "password"]) {
-        if (!req.body.hasOwnProperty(property)) {
-            res.status(400).send();
-            return
-        }
+    if (await checkProperties(req, res, ["firstName", "lastName", "email", "password"])) {
+        return
     }
     const firstName = req.body.firstName;
     const lastName = req.body.lastName;
@@ -18,10 +15,6 @@ const create = async (req: Request, res: Response) : Promise<void> => {
         res.status(400).send();
         return
     }
-    const emails = await users.getEmails();
-    Logger.http(emails);
-    Logger.http(email);
-    Logger.http(emails.includes(email));
     if ((await users.getEmails()).includes(email)) {
         res.status(403).send();
         return
@@ -76,12 +69,39 @@ const remove = async (req: Request, res: Response) : Promise<void> => {
     }
 };
 
-const login = async (req:any, res:any) : Promise<any> => {
-    return null;
+const login = async (req: Request, res: Response) : Promise<void> => {
+    Logger.http(`POST user: ${req.body.email} log in`)
+    if (await checkProperties(req, res, ["email", "password"])) {
+        return
+    }
+    const email = req.body.email;
+    const password = req.body.password;
+    if (!await users.checkPassword(email, password)) {
+        res.status(400).send();
+        return
+    }
+    try {
+        const result = await users.addAuthToken( email );
+        res.status( 200 ).send({"userId": result.id, "token": result.auth_token} );
+    } catch( err ) {
+        res.status( 500 ).send( `ERROR creating user ${email}: ${ err }` );
+    }
 };
 
-const logout = async (req:any, res:any) : Promise<any> => {
-    return null;
+const logout = async (req: Request, res: Response) : Promise<void> => {
+    if (await checkProperties(req, res, ["email", "password"])) {
+        return
+    }
 };
+
+const checkProperties = async (req: Request, res: Response, properties: string[]) : Promise<boolean> => {
+    for (const property of properties) {
+        if (!req.body.hasOwnProperty(property)) {
+            res.status(400).send();
+            return true;
+        }
+    }
+    return false;
+}
 
 export { create, read, update, remove, login, logout }
