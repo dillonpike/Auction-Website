@@ -15,7 +15,7 @@ const getAll = async () : Promise<User[]> => {
 const getOne = async (id: number) : Promise<User[]> => {
     Logger.info(`Getting user ${id} from the database`);
     const conn = await getPool().getConnection();
-    const query = 'select * from user where user_id = ?';
+    const query = 'select first_name, last_name, email from user where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
     conn.release();
     return rows;
@@ -79,16 +79,44 @@ const checkPassword = async (email: string, password: string) : Promise<boolean>
 }
 
 const addAuthToken = async (email: string) : Promise<User> => {
-    const randtoken = require('rand-token');
-    const token = randtoken.generate(32);
+    Logger.info(`Adding auth token to ${email}`)
+    const randToken = require('rand-token');
+    const token = randToken.generate(32);
     const conn = await getPool().getConnection();
     let query = 'update user set auth_token = ? where email = ?';
     await conn.query( query, [ token, email ] );
     query = 'select id, auth_token from user where email = ?';
     const [ result ] = await conn.query( query, [ email ] );
     conn.release();
-    Logger.info(result);
     return result[0];
 }
 
-export { getAll, getOne, getEmails, insert, alter, remove, checkPassword, addAuthToken }
+const removeAuthToken = async (token: string) : Promise<void> => {
+    Logger.info(`Removing auth token: ${token}`);
+    const conn = await getPool().getConnection();
+    const query = 'update user set auth_token = null where auth_token = ?';
+    const [ result ] = await conn.query( query, [ token ] );
+    conn.release();
+    return
+};
+
+const authorise = async (token: string) : Promise<boolean> => {
+    Logger.info(`Checking auth token: ${token}`)
+    const conn = await getPool().getConnection();
+    const query = 'select id from user where auth_token = ?';
+    const [ result ] = await conn.query( query, [ token ] );
+    conn.release();
+    return result.length > 0;
+}
+
+const authoriseReturnID = async (token: string) : Promise<User[]> => {
+    Logger.info(`Checking auth token: ${token}`)
+    const conn = await getPool().getConnection();
+    const query = 'select id from user where auth_token = ?';
+    const [ result ] = await conn.query( query, [ token ] );
+    conn.release();
+    return result;
+}
+
+export { getAll, getOne, getEmails, insert, alter, remove, checkPassword, addAuthToken, removeAuthToken, authorise,
+    authoriseReturnID }
