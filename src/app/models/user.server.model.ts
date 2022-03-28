@@ -15,7 +15,7 @@ const getAll = async () : Promise<User[]> => {
 const getOne = async (id: number) : Promise<User[]> => {
     Logger.info(`Getting user ${id} from the database`);
     const conn = await getPool().getConnection();
-    const query = 'select first_name, last_name, email from user where id = ?';
+    const query = 'select first_name, last_name, email, password from user where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
     conn.release();
     return rows;
@@ -40,11 +40,12 @@ const insert = async (firstName: string, lastName: string, email: string, passwo
     return result;
 };
 
-const alter = async (id: number, newUsername: string) : Promise<ResultSetHeader> => {
-    Logger.info(`Changing user ${id} to ${newUsername}`);
+const alter = async (id: number, user: User) : Promise<ResultSetHeader> => {
+    Logger.info(`Changing user ${id} details`);
+    const hash = await hashPassword(user.password);
     const conn = await getPool().getConnection();
-    const query = 'update user set username = ? where user_id = ?';
-    const [ result ] = await conn.query( query, [ newUsername, id ] );
+    const query = 'update user set first_name = ?, last_name = ?, email = ?, password = ? where id = ?';
+    const [ result ] = await conn.query( query, [ user.firstName, user.lastName, user.email, hash, id ] );
     conn.release();
     return result;
 };
@@ -62,7 +63,6 @@ const hashPassword = async (password: string) : Promise<string> => {
     const bcrypt = require('bcrypt');
     const saltRounds = 10;
     const salt = bcrypt.genSaltSync(saltRounds);
-    Logger.info(salt);
     return bcrypt.hashSync(password, salt);
 };
 

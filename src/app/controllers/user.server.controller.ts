@@ -4,7 +4,8 @@ import {Request, Response} from "express";
 
 const create = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`POST create a user with email: ${req.body.email}`)
-    if (await checkProperties(req, res, ["firstName", "lastName", "email", "password"])) {
+    if (!await checkProperties(req, res, ["firstName", "lastName", "email", "password"])) {
+        res.status(400).send();
         return
     }
     const firstName = req.body.firstName;
@@ -28,10 +29,11 @@ const create = async (req: Request, res: Response) : Promise<void> => {
 };
 
 const read = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http(`GET single user id: ${req.params.id}`)
+    Logger.http(`GET single user with id: ${req.params.id}`)
     try {
-        const id = parseInt (req.params.id, 10)
+        const id = parseInt(req.params.id, 10);
         const result = await users.getOne( id );
+        delete result[0].password;
         if (result.length === 0) {
             res.status( 404 ).send();
         } else {
@@ -46,35 +48,53 @@ const read = async (req: Request, res: Response) : Promise<void> => {
 };
 
 const update = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http(`POST id: ${req.params.id}, update username: ${req.body.username}`)
-    if (! req.body.hasOwnProperty("username")){
-        res.status(400).send("Please provide username field");
+    Logger.http(`PATCH update user with id: ${req.params.id}`)
+    const id = req.params.id
+    if (!await checkAuthToken(req, res)) {
         return
     }
-    const id = req.params.id;
-    const username = req.body.username;
-    try {
-        const result = await users.alter( parseInt(id, 10), username );
-        res.status( 200 ).send({"user_id": parseInt(id, 10), "username": username} );
-    } catch( err ) {
-        res.status( 500 ).send( `ERROR updating user ${id}: ${ err }` );
+    if (!await checkProperties(req, res, ["firstName"]) && !await checkProperties(req, res, ["lastName"]) &&
+        !await checkProperties(req, res, ["email"]) && !await checkProperties(req, res, ["password"])) {
+        res.status(400).send();
+        return
     }
-};
-
-const remove = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http(`DELETE id: ${req.params.id}`)
-    const id = req.params.id;
     try {
-        const result = await users.remove( parseInt(id, 10) );
-        res.status( 200 ).send( result );
+        const result = await users.getOne( parseInt(id, 10) );
+        if (result.length === 0) {
+            res.status(404).send();
+            return
+        }
+        if (await getUserIdFromToken(req, res) !== parseInt(id, 10)) {
+            res.status(403).send();
+            return
+        }
+        if (await checkProperties(req, res, ["email"]) && (!req.body.email.includes("@") ||
+                ((await users.getEmails()).includes(req.body.email) && req.body.email !== result[0].email)) ||
+            await checkProperties(req, res, ["password"]) && (req.body.password.length < 1 ||
+                !await checkProperties(req, res, ["currentPassword"]))) {
+            Logger.http("Invalid password or email.");
+            res.status(400).send();
+            return
+        }
+        result[0].firstName = await checkProperties(req, res, ["firstName"]) ? req.body.firstName : result[0].first_name;
+        result[0].lastName = await checkProperties(req, res, ["lastName"]) ? req.body.lastName : result[0].last_name;
+        result[0].password = await checkProperties(req, res, ["password"]) ? req.body.password : result[0].password;
+        if (await checkProperties(req, res, ["currentPassword"]) && !await users.checkPassword(result[0].email, req.body.currentPassword)) {
+            Logger.http("Incorrect password");
+            res.status(400).send();
+            return
+        }
+        await users.alter( parseInt(id, 10), result[0] );
+        res.status( 200 ).send();
     } catch( err ) {
-        res.status( 500 ).send( `ERROR deleting user ${id}: ${ err }` );
+        res.status( 500 ).send();
     }
 };
 
 const login = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`POST user: ${req.body.email} log in`)
-    if (await checkProperties(req, res, ["email", "password"])) {
+    if (!await checkProperties(req, res, ["email", "password"])) {
+        res.status(400).send();
         return
     }
     const email = req.body.email;
@@ -107,17 +127,16 @@ const logout = async (req: Request, res: Response) : Promise<void> => {
 const checkProperties = async (req: Request, res: Response, properties: string[]) : Promise<boolean> => {
     for (const property of properties) {
         if (!req.body.hasOwnProperty(property)) {
-            res.status(400).send();
-            return true;
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
 const checkAuthToken = async (req: Request, res: Response) : Promise<boolean> => {
     if (req.headers.hasOwnProperty("x-authorization") && req.headers["x-authorization"].toString() !== 'null') {
         try {
-            const authorised = users.authorise(req.headers["x-authorization"].toString());
+            const authorised = await users.authorise(req.headers["x-authorization"].toString());
             if (authorised) {
                 return true;
             }
@@ -140,4 +159,4 @@ const getUserIdFromToken = async (req: Request, res: Response) : Promise<number>
     return -1;
 }
 
-export { create, read, update, remove, login, logout }
+export { create, read, update, login, logout }
