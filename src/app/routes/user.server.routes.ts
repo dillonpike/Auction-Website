@@ -12,4 +12,8 @@ module.exports = ( app: Express ) => {
     app.route( rootUrl + '/users/:id')
         .get( users.read )
         .patch( users.update );
+    app.route( rootUrl + '/users/:id/image')
+        .get( users.readImage )
+        .put( users.setImage )
+        .put( users.removeImage );
 };

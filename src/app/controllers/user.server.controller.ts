@@ -107,7 +107,7 @@ const login = async (req: Request, res: Response) : Promise<void> => {
         const result = await users.addAuthToken( email );
         res.status( 200 ).send({"userId": result.id, "token": result.auth_token} );
     } catch( err ) {
-        res.status( 500 ).send( `ERROR creating user ${email}: ${ err }` );
+        res.status( 500 ).send();
     }
 };
 
@@ -133,6 +133,43 @@ const checkProperties = async (req: Request, res: Response, properties: string[]
     return true;
 }
 
+const readImage = async (req: Request, res: Response) : Promise<void> => {
+    Logger.http("Not yet implemented.");
+}
+
+const setImage = async (req: Request, res: Response) : Promise<void> => {
+    Logger.http(`PUT update image of user with id: ${req.params.id}`)
+    const id = req.params.id
+    if (!await checkAuthToken(req, res)) {
+        return
+    }
+    try {
+        const result = await users.getOne(parseInt(id, 10));
+        if (result.length === 0) {
+            res.status(404).send();
+            return
+        }
+        if (await getUserIdFromToken(req, res) !== parseInt(id, 10)) {
+            res.status(403).send();
+            return
+        }
+        if (!await checkContentType(req)) {
+            res.status(400).send();
+            return
+        }
+        const filename = await createFileName(req);
+        await writeFile(req, filename);
+        await users.setFilename(parseInt(id, 10), filename);
+        res.status(201).send();
+    }  catch( err ) {
+        res.status( 500 ).send();
+    }
+}
+
+const removeImage = async (req: Request, res: Response) : Promise<void> => {
+    Logger.http("Not yet implemented.");
+}
+
 const checkAuthToken = async (req: Request, res: Response) : Promise<boolean> => {
     if (req.headers.hasOwnProperty("x-authorization") && req.headers["x-authorization"].toString() !== 'null') {
         try {
@@ -153,10 +190,26 @@ const getUserIdFromToken = async (req: Request, res: Response) : Promise<number>
     if (req.headers.hasOwnProperty("x-authorization") && req.headers["x-authorization"].toString() !== 'null') {
         const result = await users.authoriseReturnID(req.headers["x-authorization"].toString());
         if (result.length > 0) {
+            Logger.info(`Token has id: ${result[0].id}`);
             return result[0].id;
         }
     }
     return -1;
 }
 
-export { create, read, update, login, logout }
+const checkContentType = async (req: Request) : Promise<boolean> => {
+    return (req.headers.hasOwnProperty("content-type") &&
+        ["image/jpeg", "image/png", "image/gif"].includes(req.headers["content-type"]));
+}
+
+const writeFile = async (req: Request, filename: string) : Promise<void> => {
+    const fs = require('mz/fs')
+    req.pipe(fs.createWriteStream(`./storage/images/${filename}`));
+}
+
+const createFileName = async (req: Request) : Promise<string> => {
+    return require('rand-token').generate(32) + "." +
+        req.headers["content-type"].slice(req.headers["content-type"].indexOf("/") + 1);
+}
+
+export { create, read, update, login, logout, readImage, setImage, removeImage }

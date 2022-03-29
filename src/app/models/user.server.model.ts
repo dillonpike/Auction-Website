@@ -79,7 +79,7 @@ const checkPassword = async (email: string, password: string) : Promise<boolean>
 }
 
 const addAuthToken = async (email: string) : Promise<User> => {
-    Logger.info(`Adding auth token to ${email}`)
+    Logger.info(`Adding auth token to ${email}`);
     const randToken = require('rand-token');
     const token = randToken.generate(32);
     const conn = await getPool().getConnection();
@@ -101,7 +101,7 @@ const removeAuthToken = async (token: string) : Promise<void> => {
 };
 
 const authorise = async (token: string) : Promise<boolean> => {
-    Logger.info(`Checking auth token: ${token}`)
+    Logger.info(`Checking auth token: ${token}`);
     const conn = await getPool().getConnection();
     const query = 'select id from user where auth_token = ?';
     const [ result ] = await conn.query( query, [ token ] );
@@ -110,13 +110,22 @@ const authorise = async (token: string) : Promise<boolean> => {
 }
 
 const authoriseReturnID = async (token: string) : Promise<User[]> => {
-    Logger.info(`Checking auth token: ${token}`)
+    Logger.info(`Checking auth token: ${token}`);
     const conn = await getPool().getConnection();
     const query = 'select id from user where auth_token = ?';
-    const [ result ] = await conn.query( query, [ token ] );
+    const [ result ] = await conn.query( query, [ token ] )
+    conn.release();
+    return result;
+}
+
+const setFilename = async (id: number, filename: string) : Promise<ResultSetHeader> => {
+    Logger.info(`Setting user ${id}'s filename to ${filename}`);
+    const conn = await getPool().getConnection();
+    const query = 'update user set image_filename = ? where id = ?';
+    const [ result ] = await conn.query( query, [ filename, id ] );
     conn.release();
     return result;
 }
 
 export { getAll, getOne, getEmails, insert, alter, remove, checkPassword, addAuthToken, removeAuthToken, authorise,
-    authoriseReturnID }
+    authoriseReturnID, setFilename }
