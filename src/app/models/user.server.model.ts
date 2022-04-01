@@ -15,7 +15,7 @@ const getAll = async () : Promise<User[]> => {
 const getOne = async (id: number) : Promise<User[]> => {
     Logger.info(`Getting user ${id} from the database`);
     const conn = await getPool().getConnection();
-    const query = 'select first_name, last_name, email, password from user where id = ?';
+    const query = 'select first_name, last_name, email from user where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
     conn.release();
     return rows;
@@ -118,6 +118,15 @@ const authoriseReturnID = async (token: string) : Promise<User[]> => {
     return result;
 }
 
+const getFilename = async (id: number) : Promise<User[]> => {
+    Logger.info(`Getting image filename of user ${id} from the database`);
+    const conn = await getPool().getConnection();
+    const query = 'select image_filename from user where id = ?';
+    const [ rows ] = await conn.query( query, [ id ] );
+    conn.release();
+    return rows;
+}
+
 const setFilename = async (id: number, filename: string) : Promise<ResultSetHeader> => {
     Logger.info(`Setting user ${id}'s filename to ${filename}`);
     const conn = await getPool().getConnection();
@@ -128,4 +137,4 @@ const setFilename = async (id: number, filename: string) : Promise<ResultSetHead
 }
 
 export { getAll, getOne, getEmails, insert, alter, remove, checkPassword, addAuthToken, removeAuthToken, authorise,
-    authoriseReturnID, setFilename }
+    authoriseReturnID, getFilename, setFilename }

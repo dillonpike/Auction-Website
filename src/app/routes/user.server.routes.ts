@@ -15,5 +15,5 @@ module.exports = ( app: Express ) => {
     app.route( rootUrl + '/users/:id/image')
         .get( users.readImage )
         .put( users.setImage )
-        .put( users.removeImage );
+        .delete( users.removeImage );
 };

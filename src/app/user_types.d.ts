@@ -10,7 +10,7 @@ type User = {
 
     lastName: string,
 
-    imageFilename: string,
+    image_filename: string,
 
     password: string,
 

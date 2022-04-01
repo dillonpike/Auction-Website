@@ -33,7 +33,6 @@ const read = async (req: Request, res: Response) : Promise<void> => {
     try {
         const id = parseInt(req.params.id, 10);
         const result = await users.getOne( id );
-        delete result[0].password;
         if (result.length === 0) {
             res.status( 404 ).send();
         } else {
@@ -134,7 +133,18 @@ const checkProperties = async (req: Request, res: Response, properties: string[]
 }
 
 const readImage = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("Not yet implemented.");
+    Logger.http(`GET image of user with id: ${req.params.id}`)
+    try {
+        const result = await users.getFilename( parseInt(req.params.id, 10) );
+        if (result.length === 0 || result[0].image_filename === null) {
+            res.status( 404 ).send();
+        } else {
+            res.setHeader('content-type', 'image/jpeg');
+            res.status( 200 ).send( await require('mz/fs').readFile(`./storage/images/${result[0].image_filename}`) );
+        }
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
 }
 
 const setImage = async (req: Request, res: Response) : Promise<void> => {
@@ -161,13 +171,34 @@ const setImage = async (req: Request, res: Response) : Promise<void> => {
         await writeFile(req, filename);
         await users.setFilename(parseInt(id, 10), filename);
         res.status(201).send();
-    }  catch( err ) {
+    } catch( err ) {
         res.status( 500 ).send();
     }
 }
 
 const removeImage = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("Not yet implemented.");
+    Logger.http(`DELETE remove image of user with id: ${req.params.id}`)
+    const id = req.params.id
+    if (!await checkAuthToken(req, res)) {
+        return
+    }
+    try {
+        const userResult = await users.getOne(parseInt(id, 10));
+        const filenameResult = await users.getFilename( parseInt(req.params.id, 10) );
+        if (userResult.length === 0 || filenameResult[0].image_filename === null) {
+            res.status(404).send();
+            return
+        }
+        if (await getUserIdFromToken(req, res) !== parseInt(id, 10)) {
+            res.status(403).send();
+            return
+        }
+        await require('mz/fs').unlink(`./storage/images/${filenameResult[0].image_filename}`);
+        const result = await users.setFilename( parseInt(req.params.id, 10), null );
+        res.status(200).send();
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
 }
 
 const checkAuthToken = async (req: Request, res: Response) : Promise<boolean> => {
@@ -203,8 +234,7 @@ const checkContentType = async (req: Request) : Promise<boolean> => {
 }
 
 const writeFile = async (req: Request, filename: string) : Promise<void> => {
-    const fs = require('mz/fs')
-    req.pipe(fs.createWriteStream(`./storage/images/${filename}`));
+    req.pipe(require('mz/fs').createWriteStream(`./storage/images/${filename}`));
 }
 
 const createFileName = async (req: Request) : Promise<string> => {
