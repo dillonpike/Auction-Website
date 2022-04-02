@@ -7,12 +7,12 @@ module.exports = ( app: Express ) => {
         .post( users.create );
     app.route( rootUrl + '/users/login' )
         .post( users.login );
-    app.route( rootUrl + '/users/logout')
+    app.route( rootUrl + '/users/logout' )
         .post( users.logout );
-    app.route( rootUrl + '/users/:id')
+    app.route( rootUrl + '/users/:id' )
         .get( users.read )
         .patch( users.update );
-    app.route( rootUrl + '/users/:id/image')
+    app.route( rootUrl + '/users/:id/image' )
         .get( users.readImage )
         .put( users.setImage )
         .delete( users.removeImage );
