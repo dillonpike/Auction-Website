@@ -155,17 +155,21 @@ const readImage = async (req: Request, res: Response) : Promise<void> => {
 
 const setImage = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`PUT update image of user with id: ${req.params.id}`)
-    const id = req.params.id
     if (!await checkAuthToken(req, res)) {
         return
     }
     try {
-        const result = await users.getOne(parseInt(id, 10));
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        const result = await users.getOne(id);
         if (result.length === 0) {
             res.status(404).send();
             return
         }
-        if (await getUserIdFromToken(req, res) !== parseInt(id, 10)) {
+        if (await getUserIdFromToken(req, res) !== id) {
             res.status(403).send();
             return
         }
@@ -175,8 +179,15 @@ const setImage = async (req: Request, res: Response) : Promise<void> => {
         }
         const filename = await createFileName(req);
         await writeFile(req, filename);
-        await users.setFilename(parseInt(id, 10), filename);
-        res.status(201).send();
+        const oldFilename = await users.getFilename(id);
+        await users.setFilename(id, filename);
+        if (oldFilename != null && await require('mz/fs').exists(`./storage/images/${oldFilename[0].image_filename}`)) {
+            Logger.info(`Removing old image from user ${id}`)
+            await require('mz/fs').unlink(`./storage/images/${oldFilename[0].image_filename}`);
+            res.status(200).send();
+        } else {
+            res.status(201).send();
+        }
     } catch( err ) {
         res.status( 500 ).send();
     }

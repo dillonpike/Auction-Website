@@ -100,4 +100,13 @@ const getFilename = async(id: number) : Promise<Auction[]> => {
     return rows;
 }
 
-export { getAuctionWithID, getAuctions, removeAuction, getBidsFromAuction, getCategories, getFilename }
+const setFilename = async (id: number, filename: string) : Promise<ResultSetHeader> => {
+    Logger.info(`Setting auction ${id}'s filename to ${filename}`);
+    const conn = await getPool().getConnection();
+    const query = 'update auction set image_filename = ? where id = ?';
+    const [ result ] = await conn.query( query, [ filename, id ] );
+    conn.release();
+    return result;
+}
+
+export { getAuctionWithID, getAuctions, removeAuction, getBidsFromAuction, getCategories, getFilename, setFilename }

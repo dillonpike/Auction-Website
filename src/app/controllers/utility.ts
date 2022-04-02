@@ -39,4 +39,18 @@ const getUserIdFromToken = async (req: Request, res: Response) : Promise<number>
     return -1;
 }
 
-export { adjustCategoryAttributes, checkAuthToken, getUserIdFromToken }
+const checkContentType = async (req: Request) : Promise<boolean> => {
+    return (req.headers.hasOwnProperty("content-type") &&
+        ["image/jpeg", "image/png", "image/gif"].includes(req.headers["content-type"]));
+}
+
+const writeFile = async (req: Request, filename: string) : Promise<void> => {
+    req.pipe(require('mz/fs').createWriteStream(`./storage/images/${filename}`));
+}
+
+const createFileName = async (req: Request) : Promise<string> => {
+    return require('rand-token').generate(32) + "." +
+        req.headers["content-type"].slice(req.headers["content-type"].indexOf("/") + 1);
+}
+
+export { adjustCategoryAttributes, checkAuthToken, getUserIdFromToken, checkContentType, writeFile, createFileName }

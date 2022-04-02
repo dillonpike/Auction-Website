@@ -3,6 +3,8 @@ import * as utility from './utility';
 import Logger from "../../config/logger";
 import {Request, Response} from "express";
 import * as users from "../models/user.server.model";
+import fs from "mz/fs";
+
 
 const read = async (req: Request, res: Response) : Promise<void> => {
     Logger.http("GET auctions");
@@ -131,7 +133,44 @@ const readImage = async (req: Request, res: Response) : Promise<void> => {
 }
 
 const setImage = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("Not yet implemented4.");
+    Logger.http(`PUT update image of auction with id: ${req.params.id}`)
+    if (!await utility.checkAuthToken(req, res)) {
+        return
+    }
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        const auction = await auctions.getAuctionWithID(id);
+        if (auction.length === 0) {
+            res.status( 404 ).send();
+            return
+        }
+        if (await utility.getUserIdFromToken(req, res) !== auction[0].sellerId) {
+            res.status(403).send();
+            return
+        }
+        if (!await utility.checkContentType(req)) {
+            res.status(400).send();
+            return
+        }
+        const filename = await utility.createFileName(req);
+        await utility.writeFile(req, filename);
+        const oldFilename = await auctions.getFilename(id);
+        await auctions.setFilename(id, filename);
+        if (oldFilename != null && await fs.exists(`./storage/images/${oldFilename[0].imageFilename}`)) {
+            Logger.info(`Removing old image from auction ${id}`)
+            await fs.unlink(`./storage/images/${oldFilename[0].imageFilename}`);
+            res.status(200).send();
+        } else {
+            res.status(201).send();
+        }
+        res.status(201).send();
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
 }
 
 export { read, create, readOne, update, remove, readCategories, readBids, placeBid, readImage, setImage }
