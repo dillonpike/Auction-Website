@@ -139,7 +139,13 @@ const readImage = async (req: Request, res: Response) : Promise<void> => {
         if (result.length === 0 || result[0].image_filename === null) {
             res.status( 404 ).send();
         } else {
-            res.setHeader('content-type', 'image/jpeg');
+            if (result[0].image_filename.endsWith('png')) {
+                res.setHeader('content-type', 'image/png');
+            } else if (result[0].image_filename.endsWith('gif')) {
+                res.setHeader('content-type', 'image/gif');
+            } else {
+                res.setHeader('content-type', 'image/jpeg');
+            }
             res.status( 200 ).send( await require('mz/fs').readFile(`./storage/images/${result[0].image_filename}`) );
         }
     } catch( err ) {

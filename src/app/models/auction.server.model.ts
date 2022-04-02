@@ -91,4 +91,13 @@ const getCategories = async () : Promise<Category[]> => {
     return rows;
 };
 
-export { getAuctionWithID, getAuctions, removeAuction, getBidsFromAuction, getCategories }
+const getFilename = async(id: number) : Promise<Auction[]> => {
+    Logger.info(`Getting image filename of auction ${id} from the database`);
+    const conn = await getPool().getConnection();
+    const query = 'select image_filename as imageFilename from auction where id = ?';
+    const [ rows ] = await conn.query( query, [ id ] );
+    conn.release();
+    return rows;
+}
+
+export { getAuctionWithID, getAuctions, removeAuction, getBidsFromAuction, getCategories, getFilename }

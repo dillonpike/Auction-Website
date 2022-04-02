@@ -2,6 +2,7 @@ import * as auctions from '../models/auction.server.model';
 import * as utility from './utility';
 import Logger from "../../config/logger";
 import {Request, Response} from "express";
+import * as users from "../models/user.server.model";
 
 const read = async (req: Request, res: Response) : Promise<void> => {
     Logger.http("GET auctions");
@@ -104,7 +105,29 @@ const placeBid = async (req: Request, res: Response) : Promise<void> => {
 }
 
 const readImage = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("Not yet implemented4.");
+    Logger.http(`GET image of auction with id: ${req.params.id}`)
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        const result = await auctions.getFilename( id );
+        if (result.length === 0 || result[0].imageFilename === null) {
+            res.status( 404 ).send();
+        } else {
+            if (result[0].imageFilename.endsWith('png')) {
+                res.setHeader('content-type', 'image/png');
+            } else if (result[0].imageFilename.endsWith('gif')) {
+                res.setHeader('content-type', 'image/gif');
+            } else {
+                res.setHeader('content-type', 'image/jpeg');
+            }
+            res.status( 200 ).send( await require('mz/fs').readFile(`./storage/images/${result[0].imageFilename}`) );
+        }
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
 }
 
 const setImage = async (req: Request, res: Response) : Promise<void> => {
