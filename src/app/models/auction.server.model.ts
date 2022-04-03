@@ -3,6 +3,7 @@ import Logger from "../../config/logger";
 import {ResultSetHeader} from "mysql2";
 import {Request} from "express";
 import {isArray} from "util";
+import * as utility from '../controllers/utility';
 
 const getAuctionWithID = async (id: number) : Promise<Auction[]> =>  {
     Logger.info(`Getting auction ${id} from the database`);
@@ -36,7 +37,7 @@ const getAuctions = async (req: Request) : Promise<Auction[]> => {
     const conn = await getPool().getConnection();
     const queryVariables: any[] = [];
     let query = 'select auction.id as auctionId, title, category_id as categoryId, seller_id as sellerId, ' +
-        'first_name as sellerFirstName, last_name as sellerLastName, reserve, count(*) as numBids, ' +
+        'first_name as sellerFirstName, last_name as sellerLastName, reserve, count(amount) as numBids, ' +
         'max(amount) as highestBid, end_date as endDate ' +
         'from auction ' +
         'left outer join user on seller_id = user.id ' +
@@ -61,12 +62,8 @@ const getAuctions = async (req: Request) : Promise<Auction[]> => {
         queryVariables.push(parseInt(req.query.bidderId as string, 10))
     }
     query += ' group by auction.id order by ';
-    const sorts = {'ALPHABETICAL_ASC': 'title asc', 'ALPHABETICAL_DESC': 'title desc', 'CLOSING_SOON': 'end_date asc',
-        'CLOSING_LAST': 'end date desc', 'BIDS_ASC': 'max(amount) asc', 'BIDS_DESC': 'max(amount) desc',
-        'RESERVE_ASC': 'reserve asc', 'RESERVE_DESC': 'reserve desc'
-    }
     // @ts-ignore
-    query += sorts[req.query.sortBy] !== undefined ? sorts[req.query.sortBy] : sorts.CLOSING_SOON;
+    query += utility.sorts[req.query.sortBy] !== undefined ? utility.sorts[req.query.sortBy] : utility.sorts.CLOSING_SOON;
     const [ rows ] = await conn.query( query, queryVariables );
     conn.release();
     return rows;
@@ -77,6 +74,38 @@ const addAuction = async (title: string, description: string, endDate: string, r
     const conn = await getPool().getConnection();
     const query = 'insert into auction (title, description, end_date, image_filename, reserve, seller_id, category_id) values ( ?, ?, ?, ?, ?, ?, ? ) '
     const [ result ] = await conn.query( query, [ title, description, endDate, null, reserve, sellerId, categoryId ] );
+    conn.release();
+    return result;
+}
+
+const alterAuction = async (req: Request) : Promise<ResultSetHeader> => {
+    Logger.info(`Altering auction ${req.params.id}`);
+    const conn = await getPool().getConnection();
+    const queryVariables: any[] = [];
+    let query = 'update auction set ';
+    if (req.body.title !== undefined) {
+        query += 'title = ?, ';
+        queryVariables.push(req.body.title);
+    }
+    if (req.body.description !== undefined) {
+        query += 'description = ?, ';
+        queryVariables.push(req.body.description);
+    }
+    if (req.body.endDate !== undefined) {
+        query += 'end_date = ?, ';
+        queryVariables.push(req.body.endDate);
+    }
+    if (req.body.reserve !== undefined) {
+        query += 'reserve = ?, ';
+        queryVariables.push(parseInt(req.body.reserve, 10));
+    }
+    if (req.body.categoryId !== undefined) {
+        query += 'category_id = ?, ';
+        queryVariables.push(parseInt(req.body.categoryId, 10));
+    }
+    query = query.slice(0, query.length - 2) + ' where id = ?';
+    queryVariables.push(parseInt(req.params.id, 10));
+    const [ result ] = await conn.query( query, queryVariables );
     conn.release();
     return result;
 }
@@ -100,6 +129,15 @@ const getBidsFromAuction = async (id: number) : Promise<Bid[]> => {
     conn.release();
     Logger.info(result);
     return result;
+}
+
+const getCategoryWithID = async (id: number) : Promise<Category[]> => {
+    Logger.info(`Getting category ${id} from the database`);
+    const conn = await getPool().getConnection();
+    const query = 'select * from category where id = ?';
+    const [ rows ] = await conn.query( query, [ id ] );
+    conn.release();
+    return rows;
 }
 
 const getCategories = async () : Promise<Category[]> => {
@@ -138,5 +176,5 @@ const setFilename = async (id: number, filename: string) : Promise<ResultSetHead
     return result;
 }
 
-export { getAuctionWithID, getAuctionWithTitle, getAuctions, addAuction, removeAuction, getBidsFromAuction,
-    getCategories, placeBid, getFilename, setFilename }
+export { getAuctionWithID, getAuctionWithTitle, getAuctions, addAuction, alterAuction, removeAuction,
+    getBidsFromAuction, getCategoryWithID, getCategories, placeBid, getFilename, setFilename }

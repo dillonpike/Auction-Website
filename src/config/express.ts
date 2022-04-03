@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser"
 import allowCrossOriginRequestsMiddleware from '../app/middleware/cors.middleware';
 import Logger from "./logger";
+import {queryParser} from "express-query-parser";
 
 export default () => {
     const app = express();
@@ -9,6 +10,11 @@ export default () => {
     app.use(allowCrossOriginRequestsMiddleware);
     app.use(bodyParser.json());
     app.use(bodyParser.raw({ type: 'text/plain' }));  // for the /executeSql endpoint
+    app.use(
+        queryParser({
+            parseNumber: true
+        })
+    )
 
     // DEBUG (you can remove these)
     app.use((req, res, next) => {

@@ -4,24 +4,24 @@ import Logger from "../../config/logger";
 import {Request, Response} from "express";
 import fs from "mz/fs";
 import Ajv, {JSONSchemaType} from "ajv";
-import {validateProperties} from "ajv/dist/vocabularies/jtd/properties";
-import {getUserIdFromToken} from "./utility";
+import {isArray} from "util";
 const ajv = new Ajv();
 
-const read = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("GET auctions");
-    try {
-        let result = await auctions.getAuctions(req);
-        const startIndex = req.query.hasOwnProperty("startIndex") ? parseInt(req.query.startIndex as string, 10) : 0;
-        const count = req.query.hasOwnProperty("count") ? parseInt(req.query.count as string, 10) : result.length;
-        result = result.slice(startIndex, startIndex + count);
-        res.status( 200 ).send({"count": result.length, "auctions": result});
-    } catch( err ) {
-        res.status( 500 ).send();
-    }
+
+const getAuctionsSchema = {
+    type: "object",
+    properties: {
+        startIndex: {type: "integer"},
+        count: {type: "integer"},
+        q: {type: "string"},
+        sellerId: {type: "integer"},
+        bidderId: {type: "integer"},
+        sortBy: {type: "string"}
+    },
+    additionalProperties: true
 }
 
-const auctionSchema = {
+const createAuctionSchema = {
     type: "object",
     properties: {
         title: {type: "string"},
@@ -34,12 +34,70 @@ const auctionSchema = {
     additionalProperties: true
 }
 
+const updateAuctionSchema = {
+    type: "object",
+    properties: {
+        title: {type: "string"},
+        description: {type: "string"},
+        categoryId: {type: "integer"},
+        endDate: {type: "string"},
+        reserve: {type: "integer"}
+    },
+    anyOf: [{"required": ["title"]}, {"required": ["description"]}, {"required": ["categoryId"]},
+        {"required": ["endDate"]}, {"required": ["reserve"]}],
+    additionalProperties: true
+}
+
+const read = async (req: Request, res: Response) : Promise<void> => {
+    Logger.http("GET auctions");
+    if (!await utility.checkPropertiesAJV(req.query, getAuctionsSchema)) {
+        res.status( 400 ).send();
+        return
+    }
+    try {
+        // @ts-ignore
+        Logger.info((req.query.sortBy !== undefined && utility.sorts[req.query.sortBy as string] === undefined))
+        Logger.info((req.query.bidderId !== undefined && parseInt(req.query.bidderId.toString(), 10)))
+        Logger.info((req.query.sellerId !== undefined && parseInt(req.query.sellerId.toString(), 10) < 0))
+        Logger.info((req.query.count !== undefined && parseInt(req.query.count.toString(), 10) < 0) )
+        // @ts-ignore
+        if ((req.query.sortBy !== undefined && utility.sorts[req.query.sortBy as string] === undefined) ||
+            (req.query.sellerId !== undefined && parseInt(req.query.sellerId.toString(), 10) < 0) ||
+            (req.query.count !== undefined && parseInt(req.query.count.toString(), 10) < 0) ||
+            (req.query.bidderId !== undefined && parseInt(req.query.bidderId.toString(), 10) < 0) ||
+            (req.query.startIndex !== undefined && parseInt(req.query.startIndex.toString(), 10) < 0) ||
+            (req.query.q !== undefined && req.query.q.length === 0)
+        ) {
+            res.status( 400 ).send();
+            return
+        }
+        if (req.query.categoryIds !== undefined) {
+            const categoryIds = isArray(req.query.categoryIds) ?
+                req.query.categoryIds.map(id => parseInt(id as string, 10)) :
+                [ parseInt(req.query.categoryIds as string, 10) ];
+            for (const categoryId of categoryIds) {
+                if (isNaN(categoryId) || (await auctions.getCategoryWithID(categoryId)).length === 0) {
+                    res.status( 400 ).send();
+                    return
+                }
+            }
+        }
+        let result = await auctions.getAuctions(req);
+        const startIndex = req.query.hasOwnProperty("startIndex") ? parseInt(req.query.startIndex as string, 10) : 0;
+        const count = req.query.hasOwnProperty("count") ? parseInt(req.query.count as string, 10) : result.length;
+        result = result.slice(startIndex, startIndex + count);
+        res.status( 200 ).send({"count": result.length, "auctions": result});
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
+}
+
 const create = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`POST auction with title ${req.body.title}`);
     if (!await utility.checkAuthToken(req, res)) {
         return
     }
-    if (!await utility.checkPropertiesAJV(req.body, auctionSchema)) {
+    if (!await utility.checkPropertiesAJV(req.body, createAuctionSchema)) {
         res.status( 400 ).send();
         return
     }
@@ -61,7 +119,6 @@ const create = async (req: Request, res: Response) : Promise<void> => {
     } catch( err ) {
         res.status( 500 ).send();
     }
-
 }
 
 const readOne = async (req: Request, res: Response) : Promise<void> => {
@@ -82,8 +139,40 @@ const readOne = async (req: Request, res: Response) : Promise<void> => {
     }
 }
 
+
+
 const update = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("Not yet implemented2.");
+    Logger.http(`PATCH update auction with id ${req.params.id}`);
+    if (!await utility.checkAuthToken(req, res)) {
+        return
+    }
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        if (!await utility.checkPropertiesAJV(req.body, updateAuctionSchema) ||
+            (req.body.categoryId !== undefined && (await auctions.getCategoryWithID(req.body.categoryId)).length === 0) ||
+            (req.body.reserve !== undefined && parseInt(req.body.reserve, 10) < 1) ||
+            (req.body.title !== undefined && req.body.title.length === 0)) {
+            res.status( 400 ).send();
+            return
+        }
+        const result = await auctions.getAuctionWithID(id);
+        if (result.length === 0) {
+            res.status( 404 ).send();
+            return
+        }
+        if ((await auctions.getBidsFromAuction(id)).length > 0) {
+            res.status( 403 ).send();
+            return
+        }
+        const updateResult = await auctions.alterAuction(req);
+        res.status( 200 ).send()
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
 }
 
 const remove = async (req: Request, res: Response) : Promise<void> => {

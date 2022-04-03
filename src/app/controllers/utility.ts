@@ -4,6 +4,11 @@ import * as users from "../models/user.server.model";
 import Ajv, {Schema} from "ajv";
 const ajv = new Ajv();
 
+const sorts = {'ALPHABETICAL_ASC': 'title asc', 'ALPHABETICAL_DESC': 'title desc', 'CLOSING_SOON': 'end_date asc',
+    'CLOSING_LAST': 'end date desc', 'BIDS_ASC': 'max(amount) asc', 'BIDS_DESC': 'max(amount) desc',
+    'RESERVE_ASC': 'reserve asc', 'RESERVE_DESC': 'reserve desc'
+}
+
 const adjustCategoryAttributes = async (categories: Category[]) => {
     Logger.info("Adjusting category attributes")
     const adjusted = [];
@@ -69,5 +74,5 @@ const createFileName = async (req: Request) : Promise<string> => {
         req.headers["content-type"].slice(req.headers["content-type"].indexOf("/") + 1);
 }
 
-export { adjustCategoryAttributes, checkProperties, checkPropertiesAJV, checkAuthToken, getUserIdFromToken,
+export { sorts, adjustCategoryAttributes, checkProperties, checkPropertiesAJV, checkAuthToken, getUserIdFromToken,
     checkContentType, writeFile, createFileName }
