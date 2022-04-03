@@ -75,8 +75,8 @@ const update = async (req: Request, res: Response) : Promise<void> => {
             res.status(400).send();
             return
         }
-        result[0].firstName = await checkProperties(req, res, ["firstName"]) ? req.body.firstName : result[0].first_name;
-        result[0].lastName = await checkProperties(req, res, ["lastName"]) ? req.body.lastName : result[0].last_name;
+        result[0].firstName = await checkProperties(req, res, ["firstName"]) ? req.body.firstName : result[0].firstName;
+        result[0].lastName = await checkProperties(req, res, ["lastName"]) ? req.body.lastName : result[0].lastName;
         result[0].password = await checkProperties(req, res, ["password"]) ? req.body.password : result[0].password;
         if (await checkProperties(req, res, ["currentPassword"]) && !await users.checkPassword(result[0].email, req.body.currentPassword)) {
             Logger.http("Incorrect password");

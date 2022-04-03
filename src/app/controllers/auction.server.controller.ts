@@ -56,11 +56,6 @@ const read = async (req: Request, res: Response) : Promise<void> => {
     }
     try {
         // @ts-ignore
-        Logger.info((req.query.sortBy !== undefined && utility.sorts[req.query.sortBy as string] === undefined))
-        Logger.info((req.query.bidderId !== undefined && parseInt(req.query.bidderId.toString(), 10)))
-        Logger.info((req.query.sellerId !== undefined && parseInt(req.query.sellerId.toString(), 10) < 0))
-        Logger.info((req.query.count !== undefined && parseInt(req.query.count.toString(), 10) < 0) )
-        // @ts-ignore
         if ((req.query.sortBy !== undefined && utility.sorts[req.query.sortBy as string] === undefined) ||
             (req.query.sellerId !== undefined && parseInt(req.query.sellerId.toString(), 10) < 0) ||
             (req.query.count !== undefined && parseInt(req.query.count.toString(), 10) < 0) ||
@@ -115,7 +110,7 @@ const create = async (req: Request, res: Response) : Promise<void> => {
         const reserve = req.body.hasOwnProperty("reserve") ? parseInt(req.body.reserve, 10) : 1;
         const result = await auctions.addAuction(req.body.title, req.body.description, req.body.endDate, reserve,
             sellerId, parseInt(req.body.categoryId, 10));
-        res.status( 200 ).send( {"auctionId": result.insertId} )
+        res.status( 201 ).send( {"auctionId": result.insertId} )
     } catch( err ) {
         res.status( 500 ).send();
     }
@@ -221,6 +216,11 @@ const readBids = async (req: Request, res: Response) : Promise<void> => {
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        const auction = await auctions.getAuctionWithID(id);
+        if (auction.length === 0) {
             res.status( 404 ).send();
             return
         }

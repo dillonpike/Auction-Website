@@ -15,7 +15,7 @@ const getAll = async () : Promise<User[]> => {
 const getOne = async (id: number) : Promise<User[]> => {
     Logger.info(`Getting user ${id} from the database`);
     const conn = await getPool().getConnection();
-    const query = 'select first_name, last_name, email from user where id = ?';
+    const query = 'select first_name as firstName, last_name as lastName, email from user where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
     conn.release();
     return rows;

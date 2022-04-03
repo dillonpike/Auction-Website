@@ -9,7 +9,7 @@ const getAuctionWithID = async (id: number) : Promise<Auction[]> =>  {
     Logger.info(`Getting auction ${id} from the database`);
     const conn = await getPool().getConnection();
     const query = 'select auction.id as auctionId, title, category_id as categoryId, seller_id as sellerId, ' +
-        'first_name as sellerFirstName, last_name as sellerLastName, reserve, count(*) as numBids, ' +
+        'first_name as sellerFirstName, last_name as sellerLastName, reserve, count(amount) as numBids, ' +
         'max(amount) as highestBid, end_date as endDate, description ' +
         'from auction ' +
         'join user on seller_id = user.id ' +
@@ -116,7 +116,6 @@ const removeAuction = async (id: number) : Promise<ResultSetHeader> =>  {
     const query = 'delete from auction where id = ?'
     const [ result ] = await conn.query( query, [ id ] );
     conn.release();
-    Logger.info(result);
     return result;
 }
 
@@ -127,7 +126,6 @@ const getBidsFromAuction = async (id: number) : Promise<Bid[]> => {
         'from auction_bid, user where user_id = user.id and auction_id = ? order by amount desc';
     const [ result ] = await conn.query( query, [ id ] );
     conn.release();
-    Logger.info(result);
     return result;
 }
 
