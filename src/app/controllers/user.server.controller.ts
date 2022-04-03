@@ -1,11 +1,40 @@
 import * as users from '../models/user.server.model';
 import Logger from "../../config/logger";
 import {Request, Response} from "express";
+import * as utility from "./utility";
+
+const createUserSchema = {
+    type: "object",
+    properties: {
+        firstName: {type: "string", minLength: 1},
+        lastName: {type: "string", minLength: 1},
+        email: {type: "string", minLength: 1},
+        password: {type: "string", minLength: 1},
+    },
+    required: ["firstName", "lastName", "email", "password"],
+    additionalProperties: true
+}
+
+const updateUserSchema = {
+    type: "object",
+    properties: {
+        firstName: {type: "string", minLength: 1},
+        lastName: {type: "string", minLength: 1},
+        email: {type: "string", minLength: 1},
+        password: {type: "string", minLength: 1},
+        currentPassword: {type: "string", minLength: 1},
+    },
+    additionalProperties: true
+}
 
 const create = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`POST create a user with email: ${req.body.email}`)
     if (!await checkProperties(req, res, ["firstName", "lastName", "email", "password"])) {
         res.status(400).send();
+        return
+    }
+    if (!await utility.checkPropertiesAJV(req.body, createUserSchema)) {
+        res.status( 400 ).send();
         return
     }
     const firstName = req.body.firstName;
@@ -73,6 +102,10 @@ const update = async (req: Request, res: Response) : Promise<void> => {
         }
         if (await getUserIdFromToken(req, res) !== id) {
             res.status(403).send();
+            return
+        }
+        if (!await utility.checkPropertiesAJV(req.body, updateUserSchema)) {
+            res.status( 400 ).send();
             return
         }
         if (await checkProperties(req, res, ["email"]) && (!req.body.email.includes("@") ||

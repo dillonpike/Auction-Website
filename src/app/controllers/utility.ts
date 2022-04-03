@@ -30,6 +30,8 @@ const checkProperties = async (req: Request, res: Response, properties: string[]
 
 const checkPropertiesAJV = async (data: any, schema: Schema) : Promise<boolean> => {
     const validate = ajv.compile(schema);
+    validate(data);
+    Logger.info(validate.errors);
     return validate(data);
 }
 

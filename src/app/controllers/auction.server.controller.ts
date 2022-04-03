@@ -48,6 +48,15 @@ const updateAuctionSchema = {
     additionalProperties: true
 }
 
+const placeBidSchema = {
+    type: "object",
+    properties: {
+        amount: {type: "integer", minimum: 1, nullable: false},
+    },
+    required: ["amount"],
+    additionalProperties: true
+}
+
 const read = async (req: Request, res: Response) : Promise<void> => {
     Logger.http("GET auctions");
     if (!await utility.checkPropertiesAJV(req.query, getAuctionsSchema)) {
@@ -237,6 +246,10 @@ const placeBid = async (req: Request, res: Response) : Promise<void> => {
     if (!await utility.checkAuthToken(req, res)) {
         return
     }
+    if (!await utility.checkPropertiesAJV(req.body, placeBidSchema)) {
+        res.status( 400 ).send();
+        return
+    }
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id)) {
@@ -250,6 +263,10 @@ const placeBid = async (req: Request, res: Response) : Promise<void> => {
         const auction = await auctions.getAuctionWithID(id);
         if (auction.length === 0) {
             res.status( 404 ).send();
+            return
+        }
+        if (new Date(auction[0].endDate) < new Date()) {
+            res.status( 403 ).send();
             return
         }
         const userId = await utility.getUserIdFromToken(req, res);
