@@ -13,8 +13,9 @@ const getAuctionWithID = async (id: number) : Promise<Auction[]> =>  {
         'from auction ' +
         'join user on seller_id = user.id ' +
         'left outer join auction_bid on auction_id = auction.id ' +
+        'where auction.id = ? ' +
         'having auction.id = ?';
-    const [ rows ] = await conn.query( query, [ id ] );
+    const [ rows ] = await conn.query( query, [ id, id ] );
     conn.release();
     return rows;
 }
@@ -91,6 +92,15 @@ const getCategories = async () : Promise<Category[]> => {
     return rows;
 };
 
+const placeBid = async (auctionId: number, userId: number, amount: number) : Promise<ResultSetHeader> => {
+    Logger.info(`Placing a bid of ${amount} on auction ${auctionId} by user ${userId}`);
+    const conn = await getPool().getConnection();
+    const query = 'insert into auction_bid (auction_id, user_id, amount, timestamp) values ( ?, ?, ?, ? )';
+    const [ result ] = await conn.query( query, [auctionId, userId, amount, new Date()] );
+    conn.release();
+    return result;
+}
+
 const getFilename = async(id: number) : Promise<Auction[]> => {
     Logger.info(`Getting image filename of auction ${id} from the database`);
     const conn = await getPool().getConnection();
@@ -109,4 +119,5 @@ const setFilename = async (id: number, filename: string) : Promise<ResultSetHead
     return result;
 }
 
-export { getAuctionWithID, getAuctions, removeAuction, getBidsFromAuction, getCategories, getFilename, setFilename }
+export { getAuctionWithID, getAuctions, removeAuction, getBidsFromAuction, getCategories, placeBid, getFilename,
+    setFilename }

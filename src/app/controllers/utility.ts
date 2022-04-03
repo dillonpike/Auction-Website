@@ -12,6 +12,15 @@ const adjustCategoryAttributes = async (categories: Category[]) => {
     return adjusted;
 }
 
+const checkProperties = async (req: Request, res: Response, properties: string[]) : Promise<boolean> => {
+    for (const property of properties) {
+        if (!req.body.hasOwnProperty(property)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 const checkAuthToken = async (req: Request, res: Response) : Promise<boolean> => {
     if (req.headers.hasOwnProperty("x-authorization") && req.headers["x-authorization"].toString() !== 'null') {
         try {
@@ -53,4 +62,5 @@ const createFileName = async (req: Request) : Promise<string> => {
         req.headers["content-type"].slice(req.headers["content-type"].indexOf("/") + 1);
 }
 
-export { adjustCategoryAttributes, checkAuthToken, getUserIdFromToken, checkContentType, writeFile, createFileName }
+export { adjustCategoryAttributes, checkProperties, checkAuthToken, getUserIdFromToken, checkContentType, writeFile,
+    createFileName }

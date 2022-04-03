@@ -4,7 +4,7 @@ import Logger from "../../config/logger";
 import {Request, Response} from "express";
 import * as users from "../models/user.server.model";
 import fs from "mz/fs";
-
+import ajv, {JSONSchemaType} from "ajv";
 
 const read = async (req: Request, res: Response) : Promise<void> => {
     Logger.http("GET auctions");
@@ -103,7 +103,35 @@ const readBids = async (req: Request, res: Response) : Promise<void> => {
 }
 
 const placeBid = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("Not yet implemented4.");
+    Logger.http(`POST place bid on auction with id ${req.params.id}`);
+    if (!await utility.checkAuthToken(req, res)) {
+        return
+    }
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status(404).send();
+            return
+        }
+        if (!await utility.checkProperties(req, res, ["amount"])) {
+            res.status(400).send();
+            return
+        }
+        const auction = await auctions.getAuctionWithID(id);
+        if (auction.length === 0) {
+            res.status( 404 ).send();
+            return
+        }
+        const userId = await utility.getUserIdFromToken(req, res);
+        if (req.body.amount <= auction[0].highestBid || auction[0].sellerId === userId) {
+            res.status( 403 ).send();
+            return
+        }
+        await auctions.placeBid(id, userId, req.body.amount);
+        res.status( 201 ).send()
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
 }
 
 const readImage = async (req: Request, res: Response) : Promise<void> => {
