@@ -97,7 +97,7 @@ const create = async (req: Request, res: Response) : Promise<void> => {
         return
     }
     try {
-        if (req.body.endDate <= new Date()) {
+        if (new Date(req.body.endDate) <= new Date()) {
             res.status( 400 ).send();
             return
         }

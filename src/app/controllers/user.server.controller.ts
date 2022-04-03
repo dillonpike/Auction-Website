@@ -32,6 +32,10 @@ const read = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`GET single user with id: ${req.params.id}`)
     try {
         const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
         const result = await users.getOne( id );
         if (result.length === 0) {
             res.status( 404 ).send();
@@ -48,7 +52,6 @@ const read = async (req: Request, res: Response) : Promise<void> => {
 
 const update = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`PATCH update user with id: ${req.params.id}`)
-    const id = req.params.id
     if (!await checkAuthToken(req, res)) {
         return
     }
@@ -58,12 +61,17 @@ const update = async (req: Request, res: Response) : Promise<void> => {
         return
     }
     try {
-        const result = await users.getOne( parseInt(id, 10) );
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        const result = await users.getOne( id );
         if (result.length === 0) {
             res.status(404).send();
             return
         }
-        if (await getUserIdFromToken(req, res) !== parseInt(id, 10)) {
+        if (await getUserIdFromToken(req, res) !== id) {
             res.status(403).send();
             return
         }
@@ -83,7 +91,7 @@ const update = async (req: Request, res: Response) : Promise<void> => {
             res.status(400).send();
             return
         }
-        await users.alter( parseInt(id, 10), result[0] );
+        await users.alter( id, result[0] );
         res.status( 200 ).send();
     } catch( err ) {
         res.status( 500 ).send();
@@ -135,7 +143,12 @@ const checkProperties = async (req: Request, res: Response, properties: string[]
 const readImage = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`GET image of user with id: ${req.params.id}`)
     try {
-        const result = await users.getFilename( parseInt(req.params.id, 10) );
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        const result = await users.getFilename( id );
         if (result.length === 0 || result[0].image_filename === null) {
             res.status( 404 ).send();
         } else {
@@ -195,23 +208,27 @@ const setImage = async (req: Request, res: Response) : Promise<void> => {
 
 const removeImage = async (req: Request, res: Response) : Promise<void> => {
     Logger.http(`DELETE remove image of user with id: ${req.params.id}`)
-    const id = req.params.id
     if (!await checkAuthToken(req, res)) {
         return
     }
     try {
-        const userResult = await users.getOne(parseInt(id, 10));
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.status( 404 ).send();
+            return
+        }
+        const userResult = await users.getOne(id);
         const filenameResult = await users.getFilename( parseInt(req.params.id, 10) );
         if (userResult.length === 0 || filenameResult[0].image_filename === null) {
             res.status(404).send();
             return
         }
-        if (await getUserIdFromToken(req, res) !== parseInt(id, 10)) {
+        if (await getUserIdFromToken(req, res) !== id) {
             res.status(403).send();
             return
         }
         await require('mz/fs').unlink(`./storage/images/${filenameResult[0].image_filename}`);
-        const result = await users.setFilename( parseInt(req.params.id, 10), null );
+        const result = await users.setFilename( id, null );
         res.status(200).send();
     } catch( err ) {
         res.status( 500 ).send();
