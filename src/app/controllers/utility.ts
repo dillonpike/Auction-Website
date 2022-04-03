@@ -1,6 +1,8 @@
 import Logger from "../../config/logger";
 import {Request, Response} from "express";
 import * as users from "../models/user.server.model";
+import Ajv, {Schema} from "ajv";
+const ajv = new Ajv();
 
 const adjustCategoryAttributes = async (categories: Category[]) => {
     Logger.info("Adjusting category attributes")
@@ -19,6 +21,11 @@ const checkProperties = async (req: Request, res: Response, properties: string[]
         }
     }
     return true;
+}
+
+const checkPropertiesAJV = async (data: any, schema: Schema) : Promise<boolean> => {
+    const validate = ajv.compile(schema);
+    return validate(data);
 }
 
 const checkAuthToken = async (req: Request, res: Response) : Promise<boolean> => {
@@ -62,5 +69,5 @@ const createFileName = async (req: Request) : Promise<string> => {
         req.headers["content-type"].slice(req.headers["content-type"].indexOf("/") + 1);
 }
 
-export { adjustCategoryAttributes, checkProperties, checkAuthToken, getUserIdFromToken, checkContentType, writeFile,
-    createFileName }
+export { adjustCategoryAttributes, checkProperties, checkPropertiesAJV, checkAuthToken, getUserIdFromToken,
+    checkContentType, writeFile, createFileName }

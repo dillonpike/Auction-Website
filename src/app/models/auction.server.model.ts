@@ -20,6 +20,16 @@ const getAuctionWithID = async (id: number) : Promise<Auction[]> =>  {
     return rows;
 }
 
+const getAuctionWithTitle = async (title: string, sellerId: number) : Promise<Auction[]> =>  {
+    Logger.info(`Getting auction ${title} from the database`);
+    const conn = await getPool().getConnection();
+    const query = 'select auction.id as auctionId, title, seller_id as sellerId from auction where title = ? and seller_id = ?';
+    const [ rows ] = await conn.query( query, [ title, sellerId ] );
+    conn.release();
+    Logger.info(rows);
+    return rows;
+}
+
 
 const getAuctions = async (req: Request) : Promise<Auction[]> => {
     Logger.info(`Getting all auctions from the database`);
@@ -62,10 +72,19 @@ const getAuctions = async (req: Request) : Promise<Auction[]> => {
     return rows;
 };
 
+const addAuction = async (title: string, description: string, endDate: string, reserve: number, sellerId: number, categoryId: number) : Promise<ResultSetHeader> =>  {
+    Logger.info(`Adding auction for ${title} to the database`);
+    const conn = await getPool().getConnection();
+    const query = 'insert into auction (title, description, end_date, image_filename, reserve, seller_id, category_id) values ( ?, ?, ?, ?, ?, ?, ? ) '
+    const [ result ] = await conn.query( query, [ title, description, endDate, null, reserve, sellerId, categoryId ] );
+    conn.release();
+    return result;
+}
+
 const removeAuction = async (id: number) : Promise<ResultSetHeader> =>  {
     Logger.info(`Removing auction ${id} from the database`);
     const conn = await getPool().getConnection();
-    const query = 'delete from auction where auction_id = ?'
+    const query = 'delete from auction where id = ?'
     const [ result ] = await conn.query( query, [ id ] );
     conn.release();
     Logger.info(result);
@@ -119,5 +138,5 @@ const setFilename = async (id: number, filename: string) : Promise<ResultSetHead
     return result;
 }
 
-export { getAuctionWithID, getAuctions, removeAuction, getBidsFromAuction, getCategories, placeBid, getFilename,
-    setFilename }
+export { getAuctionWithID, getAuctionWithTitle, getAuctions, addAuction, removeAuction, getBidsFromAuction,
+    getCategories, placeBid, getFilename, setFilename }

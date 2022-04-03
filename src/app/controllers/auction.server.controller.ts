@@ -2,9 +2,11 @@ import * as auctions from '../models/auction.server.model';
 import * as utility from './utility';
 import Logger from "../../config/logger";
 import {Request, Response} from "express";
-import * as users from "../models/user.server.model";
 import fs from "mz/fs";
-import ajv, {JSONSchemaType} from "ajv";
+import Ajv, {JSONSchemaType} from "ajv";
+import {validateProperties} from "ajv/dist/vocabularies/jtd/properties";
+import {getUserIdFromToken} from "./utility";
+const ajv = new Ajv();
 
 const read = async (req: Request, res: Response) : Promise<void> => {
     Logger.http("GET auctions");
@@ -19,8 +21,47 @@ const read = async (req: Request, res: Response) : Promise<void> => {
     }
 }
 
+const auctionSchema = {
+    type: "object",
+    properties: {
+        title: {type: "string"},
+        description: {type: "string"},
+        categoryId: {type: "integer"},
+        endDate: {type: "string"},
+        reserve: {type: "integer"}
+    },
+    required: ["title", "description", "categoryId", "endDate"],
+    additionalProperties: true
+}
+
 const create = async (req: Request, res: Response) : Promise<void> => {
-    Logger.http("Not yet implemented4.");
+    Logger.http(`POST auction with title ${req.body.title}`);
+    if (!await utility.checkAuthToken(req, res)) {
+        return
+    }
+    if (!await utility.checkPropertiesAJV(req.body, auctionSchema)) {
+        res.status( 400 ).send();
+        return
+    }
+    try {
+        if (req.body.endDate <= new Date()) {
+            res.status( 400 ).send();
+            return
+        }
+        const sellerId = await utility.getUserIdFromToken(req, res);
+        const auction = await auctions.getAuctionWithTitle(req.body.title, sellerId);
+        if (auction.length > 0) {
+            res.status( 403 ).send();
+            return
+        }
+        const reserve = req.body.hasOwnProperty("reserve") ? parseInt(req.body.reserve, 10) : 1;
+        const result = await auctions.addAuction(req.body.title, req.body.description, req.body.endDate, reserve,
+            sellerId, parseInt(req.body.categoryId, 10));
+        res.status( 200 ).send( {"auctionId": result.insertId} )
+    } catch( err ) {
+        res.status( 500 ).send();
+    }
+
 }
 
 const readOne = async (req: Request, res: Response) : Promise<void> => {
