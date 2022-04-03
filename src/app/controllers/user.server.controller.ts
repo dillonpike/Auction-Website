@@ -47,7 +47,7 @@ const create = async (req: Request, res: Response) : Promise<void> => {
     }
     try {
         if ((await users.getEmails()).includes(email)) {
-            res.status(403).send();
+            res.status(400).send();
             return
         }
         const result = await users.insert( firstName, lastName, email, password );
