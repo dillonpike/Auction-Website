@@ -42,10 +42,13 @@ const insert = async (firstName: string, lastName: string, email: string, passwo
 
 const alter = async (id: number, user: User) : Promise<ResultSetHeader> => {
     Logger.info(`Changing user ${id} details`);
-    const hash = await hashPassword(user.password);
     const conn = await getPool().getConnection();
-    const query = 'update user set first_name = ?, last_name = ?, email = ?, password = ? where id = ?';
-    const [ result ] = await conn.query( query, [ user.firstName, user.lastName, user.email, hash, id ] );
+    let query = 'update user set first_name = ?, last_name = ?, email = ?';
+    if (user.password !== undefined) {
+        query += `, password = '${await hashPassword(user.password)}'`;
+    }
+    query += ' where id = ?';
+    const [ result ] = await conn.query( query, [ user.firstName, user.lastName, user.email, id ] );
     conn.release();
     return result;
 };
