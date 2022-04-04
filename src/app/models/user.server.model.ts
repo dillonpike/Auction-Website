@@ -8,7 +8,7 @@ const getAll = async () : Promise<User[]> => {
     const conn = await getPool().getConnection();
     const query = 'select * from user';
     const [ rows ] = await conn.query( query );
-    conn.release();
+    await conn.release();
     return rows;
 };
 
@@ -17,7 +17,7 @@ const getOne = async (id: number) : Promise<User[]> => {
     const conn = await getPool().getConnection();
     const query = 'select first_name as firstName, last_name as lastName, email from user where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
-    conn.release();
+    await conn.release();
     return rows;
 };
 
@@ -26,7 +26,7 @@ const getEmails = async() : Promise<string[]> => {
     const conn = await getPool().getConnection();
     const query = 'select email from user';
     const [ rows ] = await conn.query( query );
-    conn.release();
+    await conn.release();
     return rows.map((element: { email: string; }) => element.email);
 }
 
@@ -36,7 +36,7 @@ const insert = async (firstName: string, lastName: string, email: string, passwo
     const hash = await hashPassword(password);
     const query = 'insert into user (email, first_name, last_name, image_filename, password, auth_token) values ( ?, ?, ?, ?, ?, ? )';
     const [ result ] = await conn.query( query, [ email, firstName, lastName, null, hash, null ] );
-    conn.release();
+    await conn.release();
     return result;
 };
 
@@ -49,7 +49,7 @@ const alter = async (id: number, user: User) : Promise<ResultSetHeader> => {
     }
     query += ' where id = ?';
     const [ result ] = await conn.query( query, [ user.firstName, user.lastName, user.email, id ] );
-    conn.release();
+    await conn.release();
     return result;
 };
 
@@ -58,7 +58,7 @@ const remove = async (id: number) : Promise<ResultSetHeader> => {
     const conn = await getPool().getConnection();
     const query = 'delete from user where user_id = ?';
     const [ result ] = await conn.query( query, [ id ] );
-    conn.release();
+    await conn.release();
     return result;
 };
 
@@ -73,7 +73,7 @@ const checkPassword = async (email: string, password: string) : Promise<boolean>
     const conn = await getPool().getConnection();
     const query = 'select password from user where email = ?';
     const [ result ] = await conn.query( query, [ email ] );
-    conn.release();
+    await conn.release();
     if (result.length === 0) {
         return false;
     }
@@ -90,7 +90,7 @@ const addAuthToken = async (email: string) : Promise<User> => {
     await conn.query( query, [ token, email ] );
     query = 'select id, auth_token from user where email = ?';
     const [ result ] = await conn.query( query, [ email ] );
-    conn.release();
+    await conn.release();
     return result[0];
 }
 
@@ -99,7 +99,7 @@ const removeAuthToken = async (token: string) : Promise<void> => {
     const conn = await getPool().getConnection();
     const query = 'update user set auth_token = null where auth_token = ?';
     const [ result ] = await conn.query( query, [ token ] );
-    conn.release();
+    await conn.release();
     return
 };
 
@@ -108,7 +108,7 @@ const authorise = async (token: string) : Promise<boolean> => {
     const conn = await getPool().getConnection();
     const query = 'select id from user where auth_token = ?';
     const [ result ] = await conn.query( query, [ token ] );
-    conn.release();
+    await conn.release();
     return result.length > 0;
 }
 
@@ -117,7 +117,7 @@ const authoriseReturnID = async (token: string) : Promise<User[]> => {
     const conn = await getPool().getConnection();
     const query = 'select id from user where auth_token = ?';
     const [ result ] = await conn.query( query, [ token ] )
-    conn.release();
+    await conn.release();
     return result;
 }
 
@@ -126,7 +126,7 @@ const getFilename = async (id: number) : Promise<User[]> => {
     const conn = await getPool().getConnection();
     const query = 'select image_filename from user where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
-    conn.release();
+    await conn.release();
     return rows;
 }
 
@@ -135,7 +135,7 @@ const setFilename = async (id: number, filename: string) : Promise<ResultSetHead
     const conn = await getPool().getConnection();
     const query = 'update user set image_filename = ? where id = ?';
     const [ result ] = await conn.query( query, [ filename, id ] );
-    conn.release();
+    await conn.release();
     return result;
 }
 

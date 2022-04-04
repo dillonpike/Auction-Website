@@ -17,7 +17,7 @@ const getAuctionWithID = async (id: number) : Promise<Auction[]> =>  {
         'where auction.id = ? ' +
         'having auction.id = ?';
     const [ rows ] = await conn.query( query, [ id, id ] );
-    conn.release();
+    await conn.release();
     return rows;
 }
 
@@ -26,7 +26,7 @@ const getAuctionWithTitle = async (title: string, sellerId: number) : Promise<Au
     const conn = await getPool().getConnection();
     const query = 'select auction.id as auctionId, title, seller_id as sellerId from auction where title = ? and seller_id = ?';
     const [ rows ] = await conn.query( query, [ title, sellerId ] );
-    conn.release();
+    await conn.release();
     Logger.info(rows);
     return rows;
 }
@@ -65,7 +65,7 @@ const getAuctions = async (req: Request) : Promise<Auction[]> => {
     // @ts-ignore
     query += utility.sorts[req.query.sortBy] !== undefined ? utility.sorts[req.query.sortBy] : utility.sorts.CLOSING_SOON;
     const [ rows ] = await conn.query( query, queryVariables );
-    conn.release();
+    await conn.release();
     return rows;
 };
 
@@ -74,7 +74,7 @@ const addAuction = async (title: string, description: string, endDate: string, r
     const conn = await getPool().getConnection();
     const query = 'insert into auction (title, description, end_date, image_filename, reserve, seller_id, category_id) values ( ?, ?, ?, ?, ?, ?, ? ) '
     const [ result ] = await conn.query( query, [ title, description, endDate, null, reserve, sellerId, categoryId ] );
-    conn.release();
+    await conn.release();
     return result;
 }
 
@@ -106,7 +106,7 @@ const alterAuction = async (req: Request) : Promise<ResultSetHeader> => {
     query = query.slice(0, query.length - 2) + ' where id = ?';
     queryVariables.push(parseInt(req.params.id, 10));
     const [ result ] = await conn.query( query, queryVariables );
-    conn.release();
+    await conn.release();
     return result;
 }
 
@@ -115,7 +115,7 @@ const removeAuction = async (id: number) : Promise<ResultSetHeader> =>  {
     const conn = await getPool().getConnection();
     const query = 'delete from auction where id = ?'
     const [ result ] = await conn.query( query, [ id ] );
-    conn.release();
+    await conn.release();
     return result;
 }
 
@@ -125,7 +125,7 @@ const getBidsFromAuction = async (id: number) : Promise<Bid[]> => {
     const query = 'select user_id as bidderId, amount, first_name as firstName, last_name as lastName, timestamp ' +
         'from auction_bid, user where user_id = user.id and auction_id = ? order by amount desc';
     const [ result ] = await conn.query( query, [ id ] );
-    conn.release();
+    await conn.release();
     return result;
 }
 
@@ -134,7 +134,7 @@ const getCategoryWithID = async (id: number) : Promise<Category[]> => {
     const conn = await getPool().getConnection();
     const query = 'select * from category where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
-    conn.release();
+    await conn.release();
     return rows;
 }
 
@@ -143,7 +143,7 @@ const getCategories = async () : Promise<Category[]> => {
     const conn = await getPool().getConnection();
     const query = 'select * from category';
     const [ rows ] = await conn.query( query );
-    conn.release();
+    await conn.release();
     return rows;
 };
 
@@ -152,7 +152,7 @@ const placeBid = async (auctionId: number, userId: number, amount: number) : Pro
     const conn = await getPool().getConnection();
     const query = 'insert into auction_bid (auction_id, user_id, amount, timestamp) values ( ?, ?, ?, ? )';
     const [ result ] = await conn.query( query, [auctionId, userId, amount, new Date()] );
-    conn.release();
+    await conn.release();
     return result;
 }
 
@@ -161,7 +161,7 @@ const getFilename = async(id: number) : Promise<Auction[]> => {
     const conn = await getPool().getConnection();
     const query = 'select image_filename as imageFilename from auction where id = ?';
     const [ rows ] = await conn.query( query, [ id ] );
-    conn.release();
+    await conn.release();
     return rows;
 }
 
@@ -170,7 +170,7 @@ const setFilename = async (id: number, filename: string) : Promise<ResultSetHead
     const conn = await getPool().getConnection();
     const query = 'update auction set image_filename = ? where id = ?';
     const [ result ] = await conn.query( query, [ filename, id ] );
-    conn.release();
+    await conn.release();
     return result;
 }
 
