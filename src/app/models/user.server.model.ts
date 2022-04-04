@@ -140,4 +140,4 @@ const setFilename = async (id: number, filename: string) : Promise<ResultSetHead
 }
 
 export { getAll, getOne, getEmails, insert, alter, remove, checkPassword, addAuthToken, removeAuthToken, authorise,
-    authoriseReturnID, getFilename, setFilename }
+    authoriseReturnID, getFilename, setFilename, hashPassword }
