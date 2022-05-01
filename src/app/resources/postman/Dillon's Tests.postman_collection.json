@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "e1935761-39e7-4a88-98bb-4e7478ab679e",
-		"name": "Auctions site student edited",
+		"_postman_id": "31203740-705e-4070-b69c-e9f37feb6678",
+		"name": "Dillon's Tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -503,6 +503,19 @@
 							"item": [
 								{
 									"name": "POST /users/register 2",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 201\", function () {",
+													"    pm.response.to.have.status(201);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
 									"request": {
 										"method": "POST",
 										"header": [],
@@ -855,6 +868,19 @@
 							"item": [
 								{
 									"name": "POST /users/login 2",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
 									"request": {
 										"method": "POST",
 										"header": [],
@@ -881,7 +907,60 @@
 									"response": []
 								},
 								{
+									"name": "POST /users/login User 1",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n\t\"email\": \"k@gmail.com\",\r\n\t\"password\": \"abc123\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{BASE_URL}}/users/login",
+											"host": [
+												"{{BASE_URL}}"
+											],
+											"path": [
+												"users",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
 									"name": "POST /users/login empty email",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 400\", function () {",
+													"    pm.response.to.have.status(400);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
 									"request": {
 										"method": "POST",
 										"header": [],
@@ -909,6 +988,19 @@
 								},
 								{
 									"name": "POST /users/login empty password",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 400\", function () {",
+													"    pm.response.to.have.status(400);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
 									"request": {
 										"method": "POST",
 										"header": [],
