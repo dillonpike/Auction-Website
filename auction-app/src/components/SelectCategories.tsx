@@ -8,9 +8,11 @@ interface ICategoriesProps {
 
 const SelectCategories = (props: ICategoriesProps) => {
 
-    const setCategories = (event: any) => {
-        props.setCategories(event.target.value)
-        return
+    const updateCategories = (options: any) => {
+        props.setCategories(options.map((c: any) => {
+            return {categoryId: c.value, name: c.label}
+        }))
+        return options
     }
 
     const options = [
@@ -26,7 +28,7 @@ const SelectCategories = (props: ICategoriesProps) => {
     return (
         <div>
             <Select isMulti className="basic-multi-select" options={options} placeholder="Categories"
-                    onChange={setCategories}/>
+                    onChange={updateCategories}/>
         </div>
     )
 }
