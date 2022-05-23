@@ -5,6 +5,7 @@ import Select, {SelectChangeEvent} from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 
 interface IPaginationProps {
+    page: number
     setPage: Function
     pageCount: number
     getAuctions: Function
@@ -18,6 +19,7 @@ const AuctionPagination = (props: IPaginationProps) => {
     }
 
     const updateCountPerPage = (event: SelectChangeEvent) => {
+
         props.setCountPerPage(event.target.value)
     }
 
@@ -34,7 +36,7 @@ const AuctionPagination = (props: IPaginationProps) => {
 
     return (
         <Box style={box}>
-            <Pagination count={props.pageCount} onChange={updatePage}/>
+            <Pagination count={props.pageCount} onChange={updatePage} page={props.page}/>
             <Select label="Auctions per Page" onChange={updateCountPerPage} defaultValue={"10"}>
                 {countPerPageOptions()}
             </Select>

@@ -32,7 +32,6 @@ const Home = () => {
     }, [setAllCategories])
 
     const getAuctions = () => {
-        console.log("Getting auctions")
         axios.get('http://localhost:4941/api/v1/auctions',
             { params: { q: searchTitle, categoryIds: categories.map((c: Category) => {return c.categoryId}),
                                status: status, sortBy: sort, startIndex: (page-1) * countPerPage, count: countPerPage }})
@@ -49,7 +48,15 @@ const Home = () => {
 
     React.useEffect(() => {
         getAuctions()
-    }, [categories, status, sort, page, countPerPage])
+    }, [page])
+
+    React.useEffect(() => {
+        if (page != 1) {
+            setPage(1)
+        } else {
+            getAuctions()
+        }
+    }, [categories, status, sort, searchTitle, countPerPage])
 
     const auction_rows = () => auctions.map((auction: Auction) =>
         <AuctionListObject key={auction.auctionId} auction={auction} categories={allCategories}/>)
@@ -68,7 +75,6 @@ const Home = () => {
         <div>
             <Toolbar style={card}>
                 <SearchBar setSearchTitle={setSearchTitle}/>
-                <Button onClick={getAuctions} variant="outlined">Search</Button>
             </Toolbar>
             <Box style={box}>
                 <SelectCategories categories={allCategories} setCategories={setCategories}/>
@@ -76,7 +82,7 @@ const Home = () => {
                 <SelectSort setSort={setSort}/>
             </Box>
             {auction_rows()}
-            <AuctionPagination setPage={setPage} pageCount={pageCount} getAuctions={getAuctions} setCountPerPage={setCountPerPage}/>
+            <AuctionPagination page={page} setPage={setPage} pageCount={pageCount} getAuctions={getAuctions} setCountPerPage={setCountPerPage}/>
         </div>
     )
 }
