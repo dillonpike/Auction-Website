@@ -18,7 +18,7 @@ const SelectSort = (props: ISortProps) => {
         <div>
             <FormControl fullWidth>
                 <InputLabel>Sort By</InputLabel>
-                <Select label="Sort By" onChange={updateSort}>
+                <Select label="Sort By" onChange={updateSort} defaultValue={"CLOSING_SOON"}>
                     <MenuItem value={"ALPHABETICAL_ASC"}>Alphabetically</MenuItem>
                     <MenuItem value={"ALPHABETICAL_DESC"}>Reverse Alphabetically</MenuItem>
                     <MenuItem value={"BIDS_ASC"}>Lowest Bid</MenuItem>

@@ -18,7 +18,7 @@ const SelectStatus = (props: IStatusProps) => {
         <div>
             <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
-                <Select label="Status" onChange={updateStatus}>
+                <Select label="Status" onChange={updateStatus} defaultValue={"ANY"}>
                     <MenuItem value={"ANY"}>Any</MenuItem>
                     <MenuItem value={"OPEN"}>Open</MenuItem>
                     <MenuItem value={"CLOSED"}>Closed</MenuItem>
