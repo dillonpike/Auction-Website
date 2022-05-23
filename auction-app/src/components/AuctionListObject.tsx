@@ -6,26 +6,23 @@ import UserListObject from "./UserListObject";
 
 interface IAuctionProps {
     auction: Auction
+    categories: Array<Category>
 }
 
 const AuctionListObject = (props: IAuctionProps) => {
 
     const [auction] = React.useState<Auction>(props.auction)
+    const [categories, setCategories] = React.useState<Array<Category>>(props.categories)
     const [category, setCategory] = React.useState("")
 
     React.useEffect(() => {
         const getCategory = () => {
-            axios.get('http://localhost:4941/api/v1/auctions/categories')
-                .then((response) => {
-                    const categories = response.data
-                    for (const category of categories) {
-                        if (category.categoryId === auction.categoryId) {
-                            setCategory(category.name)
-                        }
-                    }
-                }, () => {
-                    setCategory("Unknown")
-                })
+            for (const category of categories) {
+                if (category.categoryId === auction.categoryId) {
+                    setCategory(category.name)
+                    break
+                }
+            }
         }
         getCategory()
     }, [setCategory])

@@ -3,9 +3,15 @@ import Select from 'react-select'
 
 interface ICategoriesProps {
     categories: Array<Category>
+    setCategories: Function
 }
 
-const SelectFilter = (props: ICategoriesProps) => {
+const SelectCategories = (props: ICategoriesProps) => {
+
+    const setCategories = (event: any) => {
+        props.setCategories(event.target.value)
+        return
+    }
 
     const options = [
         {
@@ -19,8 +25,9 @@ const SelectFilter = (props: ICategoriesProps) => {
 
     return (
         <div>
-            <Select isMulti className="basic-multi-select" options={options} placeholder="Categories"/>
+            <Select isMulti className="basic-multi-select" options={options} placeholder="Categories"
+                    onChange={setCategories}/>
         </div>
     )
 }
-export default SelectFilter;
+export default SelectCategories;

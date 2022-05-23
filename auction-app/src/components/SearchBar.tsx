@@ -1,47 +1,19 @@
-import {TextField, Paper, Toolbar, Button} from "@mui/material";
-import CSS from 'csstype';
-import axios from "axios";
+import {TextField} from "@mui/material";
 import React from "react";
-import AuctionListObject from "./AuctionListObject";
 
-const SearchBar = () => {
+interface ISearchTitleProps {
+    setSearchTitle: Function
+}
 
-    const [auctions, setAuctions] = React.useState([])
-    const [searchTitle, setSearchTitle] = React.useState("")
+const SearchBar = (props: ISearchTitleProps) => {
 
     const updateSearchTitleState = (event: any) => {
-        setSearchTitle(event.target.value)
+        props.setSearchTitle(event.target.value)
     }
-
-    const card: CSS.Properties = {
-        padding: "10px",
-        margin: "20px",
-    }
-
-    const getAuctions = () => {
-        axios.get('http://localhost:4941/api/v1/auctions', { params: { q: searchTitle } })
-            .then((response) => {
-                setAuctions(response.data.auctions)
-                // setErrorFlag(false)
-                // setErrorMessage("")
-            }, (error) => {
-                // setErrorFlag(true)
-                // setErrorMessage(error.toString())
-            })
-    }
-
-    const auction_rows = () => auctions.map((auction: Auction) =>
-        <AuctionListObject key={auction.auctionId} auction={auction}/>)
 
     return (
-        <div>
-            <Toolbar style={card}>
-                <TextField fullWidth id="search-bar" label="Search" variant="outlined"
-                           value={searchTitle} onChange={updateSearchTitleState}/>
-                <Button onClick={getAuctions} variant="outlined">Search</Button>
-            </Toolbar>
-            {auction_rows()}
-        </div>
+        <TextField fullWidth id="search-bar" label="Search" variant="outlined"
+                   onChange={updateSearchTitleState}/>
     )
 }
 export default SearchBar;
