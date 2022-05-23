@@ -43,6 +43,7 @@ const UserListObject = (props: IUserIdProps) => {
                 component="img"
                 sx={{ width: 68, height: 68 }}
                 image={`http://localhost:4941/api/v1/users/${userId}/image`}
+                onError={(event: any) => {event.target.src = `https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg`}}
             />
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flex: '1 0 auto' }}>

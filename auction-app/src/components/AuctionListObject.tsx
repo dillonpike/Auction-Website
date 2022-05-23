@@ -62,6 +62,7 @@ const AuctionListObject = (props: IAuctionProps) => {
                 width="200"
                 sx={{objectFit:"contain"}}
                 image={`http://localhost:4941/api/v1/auctions/${auction.auctionId}/image`}
+                onError={(event: any) => {event.target.src = `https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg`}}
                 alt="Auction hero"
             />
             <CardContent>
