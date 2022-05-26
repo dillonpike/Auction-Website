@@ -98,11 +98,23 @@ const AuctionPage = () => {
             .replaceAll(',', '');
     }
 
-    const bidder_list = () => bids.map((bid: Bid) =>
-        <BidderListObject key={bid.timestamp} bid={bid}/>)
+    const bidder_list = () => {
+        if (bids.length > 0) {
+            return bids.map((bid: Bid) => <BidderListObject key={bid.timestamp} bid={bid}/>)
+        } else {
+            return <Typography variant="subtitle1">No bids</Typography>
+        }
+    }
 
-    const auction_list = () => similarAuctions.map((similarAuction: Auction) =>
-        <AuctionListObject key={similarAuction.auctionId} auction={similarAuction} categories={allCategories}/>)
+    const similar_auctions_list = () => {
+        if (similarAuctions.length > 0) {
+            return similarAuctions.map((similarAuction: Auction) =>
+                <AuctionListObject key={similarAuction.auctionId} auction={similarAuction} categories={allCategories}/>)
+        } else {
+            return <Typography variant="subtitle1">No similar auctions</Typography>
+        }
+
+    }
 
     const auctionCardStyles: CSS.Properties = {
         display: "inline-block",
@@ -126,7 +138,7 @@ const AuctionPage = () => {
                         />
                     </Card>
                     <Typography variant="h5" component="div">Similar Auctions</Typography>
-                    {auction_list()}
+                    {similar_auctions_list()}
                 </Grid>
                 <Grid item xs={6}>
                     <Card sx={auctionCardStyles}>
