@@ -6,6 +6,7 @@ import CSS from "csstype";
 import axios from "axios";
 import BidderListObject from "./BidderListObject";
 import AuctionListObject from "./AuctionListObject";
+import NavigationBar from "./NavigationBar";
 
 const AuctionPage = () => {
 
@@ -123,40 +124,43 @@ const AuctionPage = () => {
     }
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={2}>
-                <Grid item xs={6}>
-                    <Card sx={auctionCardStyles}>
-                        <CardMedia
-                            component="img"
-                            height="500"
-                            width="500"
-                            sx={{objectFit:"contain"}}
-                            image={`http://localhost:4941/api/v1/auctions/${auction.auctionId}/image`}
-                            onError={(event: any) => {event.target.src = `https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg`}}
-                            alt="Auction hero"
-                        />
-                    </Card>
-                    <Typography variant="h5" component="div">Similar Auctions</Typography>
-                    {similar_auctions_list()}
+        <div>
+            <NavigationBar/>
+            <Box sx={{ flexGrow: 1 }}>
+                <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                        <Card sx={auctionCardStyles}>
+                            <CardMedia
+                                component="img"
+                                height="500"
+                                width="500"
+                                sx={{objectFit:"contain"}}
+                                image={`http://localhost:4941/api/v1/auctions/${auction.auctionId}/image`}
+                                onError={(event: any) => {event.target.src = `https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg`}}
+                                alt="Auction hero"
+                            />
+                        </Card>
+                        <Typography variant="h5" component="div">Similar Auctions</Typography>
+                        {similar_auctions_list()}
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Card sx={auctionCardStyles}>
+                            <CardContent>
+                                <Typography variant="h5" component="div">{auction.title}</Typography>
+                                <Typography variant="subtitle1" component="div">Closes on: {getEndDateString()}</Typography>
+                                <Typography variant="subtitle1">Category: {category}</Typography>
+                                <Typography variant="subtitle1">Description: {auction.description}</Typography>
+                                <Typography variant="subtitle1">Reserve: {auction.reserve}</Typography>
+                                <Typography variant="subtitle1">Number of bids: {auction.numBids}</Typography>
+                                <UserListObject key={auction.sellerId} userId={auction.sellerId}/>
+                            </CardContent>
+                        </Card>
+                        <Typography variant="h5" component="div">Bidders</Typography>
+                        {bidder_list()}
+                    </Grid>
                 </Grid>
-                <Grid item xs={6}>
-                    <Card sx={auctionCardStyles}>
-                        <CardContent>
-                            <Typography variant="h5" component="div">{auction.title}</Typography>
-                            <Typography variant="subtitle1" component="div">Closes on: {getEndDateString()}</Typography>
-                            <Typography variant="subtitle1">Category: {category}</Typography>
-                            <Typography variant="subtitle1">Description: {auction.description}</Typography>
-                            <Typography variant="subtitle1">Reserve: {auction.reserve}</Typography>
-                            <Typography variant="subtitle1">Number of bids: {auction.numBids}</Typography>
-                            <UserListObject key={auction.sellerId} userId={auction.sellerId}/>
-                        </CardContent>
-                    </Card>
-                    <Typography variant="h5" component="div">Bidders</Typography>
-                    {bidder_list()}
-                </Grid>
-            </Grid>
-        </Box>
+            </Box>
+        </div>
     )
 }
 export default AuctionPage;

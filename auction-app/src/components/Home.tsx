@@ -8,6 +8,7 @@ import CSS from "csstype";
 import SelectStatus from "./SelectStatus";
 import SelectSort from "./SelectSort";
 import AuctionPagination from "./AuctionPagination";
+import NavigationBar from "./NavigationBar";
 
 const Home = () => {
 
@@ -73,6 +74,7 @@ const Home = () => {
 
     return (
         <div>
+            <NavigationBar/>
             <Toolbar style={card}>
                 <SearchBar setSearchTitle={setSearchTitle}/>
             </Toolbar>
