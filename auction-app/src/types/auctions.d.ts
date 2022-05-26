@@ -8,5 +8,6 @@ type Auction = {
     reserve: number,
     numBids: number,
     highestBid: number,
-    endDate: string
+    endDate: string,
+    description: string
 }

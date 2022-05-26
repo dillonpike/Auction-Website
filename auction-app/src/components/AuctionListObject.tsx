@@ -1,8 +1,9 @@
 import {Card, CardContent, CardMedia, Typography} from "@mui/material";
 import CSS from 'csstype';
 import React from "react";
-import axios from "axios";
 import UserListObject from "./UserListObject";
+import {useNavigate} from "react-router-dom";
+import styles from "../css/AuctionListObject.module.css";
 
 interface IAuctionProps {
     auction: Auction
@@ -12,12 +13,12 @@ interface IAuctionProps {
 const AuctionListObject = (props: IAuctionProps) => {
 
     const [auction] = React.useState<Auction>(props.auction)
-    const [categories, setCategories] = React.useState<Array<Category>>(props.categories)
     const [category, setCategory] = React.useState("")
+    const navigate = useNavigate();
 
     React.useEffect(() => {
         const getCategory = () => {
-            for (const category of categories) {
+            for (const category of props.categories) {
                 if (category.categoryId === auction.categoryId) {
                     setCategory(category.name)
                     break
@@ -48,11 +49,12 @@ const AuctionListObject = (props: IAuctionProps) => {
         // height: "328px",
         width: "300px",
         margin: "10px",
-        padding: "0px"
+        padding: "0px",
+        cursor: "pointer"
     }
 
     return (
-        <Card sx={auctionCardStyles}>
+        <Card sx={auctionCardStyles} className={styles.card} onClick={() => navigate(`/auction/${auction.auctionId}`)}>
             <CardMedia
                 component="img"
                 height="200"
