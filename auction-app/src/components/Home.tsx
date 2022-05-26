@@ -51,14 +51,14 @@ const Home = () => {
     }, [page])
 
     React.useEffect(() => {
-        if (page != 1) {
+        if (page !== 1) {
             setPage(1)
         } else {
             getAuctions()
         }
     }, [categories, status, sort, searchTitle, countPerPage])
 
-    const auction_rows = () => auctions.map((auction: Auction) =>
+    const auction_list = () => auctions.map((auction: Auction) =>
         <AuctionListObject key={auction.auctionId} auction={auction} categories={allCategories}/>)
 
     const card: CSS.Properties = {
@@ -81,7 +81,7 @@ const Home = () => {
                 <SelectStatus setStatus={setStatus}/>
                 <SelectSort setSort={setSort}/>
             </Box>
-            {auction_rows()}
+            {auction_list()}
             <AuctionPagination page={page} setPage={setPage} pageCount={pageCount} getAuctions={getAuctions} setCountPerPage={setCountPerPage}/>
         </div>
     )

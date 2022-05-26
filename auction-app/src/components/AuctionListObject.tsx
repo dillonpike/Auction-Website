@@ -54,7 +54,7 @@ const AuctionListObject = (props: IAuctionProps) => {
     }
 
     return (
-        <Card sx={auctionCardStyles} className={styles.card} onClick={() => navigate(`/auction/${auction.auctionId}`)}>
+        <Card sx={auctionCardStyles} className={styles.card} onClick={() => {navigate(`/auction/${auction.auctionId}`); window.location.reload()}}>
             <CardMedia
                 component="img"
                 height="200"

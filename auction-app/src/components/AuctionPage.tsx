@@ -24,12 +24,15 @@ const AuctionPage = () => {
     }
     const { id } = useParams();
     const [auction, setAuction] = React.useState<Auction>(defaultAuction);
+    const [similarAuctions, setSimilarAuctions] = React.useState<Array<Auction>>([]);
+    const [allCategories, setAllCategories] = React.useState<Array<Category>>([]);
     const [category, setCategory] = React.useState("")
     const [bids, setBids] = React.useState<Array<Bid>>([])
 
     const getCategory = () => {
         axios.get('http://localhost:4941/api/v1/auctions/categories')
             .then((response) => {
+                setAllCategories(response.data)
                 for (const category of response.data) {
                     if (category.categoryId === auction.categoryId) {
                         setCategory(category.name)
@@ -64,6 +67,19 @@ const AuctionPage = () => {
             })
     }
 
+    const getSimilarAuctions = () => {
+        axios.get('http://localhost:4941/api/v1/auctions',
+            { params: { categoryIds: [auction.categoryId], sellerId: auction.sellerId }})
+            .then((response) => {
+                setSimilarAuctions(response.data.auctions.filter((similarAuction: Auction) => auction.auctionId != similarAuction.auctionId))
+                // setErrorFlag(false)
+                // setErrorMessage("")
+            }, (error) => {
+                // setErrorFlag(true)
+                // setErrorMessage(error.toString())
+            })
+    }
+
     React.useEffect(() => {
         getAuction()
         getBids()
@@ -71,6 +87,7 @@ const AuctionPage = () => {
 
     React.useEffect(() => {
         getCategory()
+        getSimilarAuctions()
     }, [auction])
 
     const getEndDateString = () => {
@@ -83,6 +100,9 @@ const AuctionPage = () => {
 
     const bidder_list = () => bids.map((bid: Bid) =>
         <BidderListObject key={bid.timestamp} bid={bid}/>)
+
+    const auction_list = () => similarAuctions.map((similarAuction: Auction) =>
+        <AuctionListObject key={similarAuction.auctionId} auction={similarAuction} categories={allCategories}/>)
 
     const auctionCardStyles: CSS.Properties = {
         display: "inline-block",
@@ -105,6 +125,8 @@ const AuctionPage = () => {
                             alt="Auction hero"
                         />
                     </Card>
+                    <Typography variant="h5" component="div">Similar Auctions</Typography>
+                    {auction_list()}
                 </Grid>
                 <Grid item xs={6}>
                     <Card sx={auctionCardStyles}>
