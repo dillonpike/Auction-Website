@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
 import FormControl from "@mui/material/FormControl";
-import {register, login} from "../api/api"
+import {register, login, getUser} from "../api/api"
 import {useNavigate} from "react-router-dom";
 import {useUserStore} from "../store";
 
@@ -30,7 +30,7 @@ const RegisterPage = () => {
         error: ''
     });
     const navigate = useNavigate();
-    const setUserId = useUserStore(state => state.setUserId)
+    const setUser = useUserStore(state => state.setUser)
 
     const handleChange =
         (value: keyof State) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +53,15 @@ const RegisterPage = () => {
             .then(() => {
                 login(values.email, values.password).then((response) => {
                     navigate('/')
-                    setUserId(response.data.userId)
+                    const userId = response.data.userId
+                    getUser(response.data.userId).then((response) => {
+                        setUser({
+                            userId: userId,
+                            firstName: response.firstName,
+                            lastName: response.lastName,
+                            email: response.email})
+                    })
+
                     }
                 )
             }, (error: any) => {

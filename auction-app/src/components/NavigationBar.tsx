@@ -29,25 +29,14 @@ const NavigationBar = () => {
     const [snackOpen, setSnackOpen] = React.useState(false)
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("error")
-    const [user, setUser] = React.useState<User>({userId: -1, firstName: "", lastName: "", email: ""})
-    const userId = useUserStore(state => state.userId)
+    const user = useUserStore(state => state.user)
 
     React.useEffect(() => {
-        isLoggedIn(userId)
+        isLoggedIn(user.userId)
             .then((result: boolean) => {
                 setUserIsLoggedIn(result)
-                if (result) {
-                    getUser(userId)
-                        .then((response) => {
-                            setUser(response)
-                        }, (error) => {
-                            setSnackMessage(`Failed to load user`)
-                            setSnackOpen(true)
-                            setSnackSeverity("error")
-                        })
-                }
             })
-    }, [userId])
+    }, [user])
 
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
@@ -129,7 +118,7 @@ const NavigationBar = () => {
                         <Tooltip title="Open settings">
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                                 <Avatar
-                                    src={`http://localhost:4941/api/v1/users/${userId}/image`}
+                                    src={`http://localhost:4941/api/v1/users/${user.userId}/image`}
                                 />
                             </IconButton>
                         </Tooltip>
@@ -259,7 +248,6 @@ const NavigationBar = () => {
             </AppBar>
             {snackbar()}
         </div>
-
     );
 };
 export default NavigationBar;

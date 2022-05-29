@@ -1,21 +1,21 @@
 import create from 'zustand';
 
 interface UserState {
-    userId: number;
-    setUserId: (userId: number) => void;
+    user: User;
+    setUser: (user: User) => void;
 }
 
-const getLocalStorage = (key: string): number =>
+const getLocalStorage = (key: string): User =>
     JSON.parse(window.localStorage.getItem(key) as string);
-const setLocalStorage = (key: string, value:number) =>
+const setLocalStorage = (key: string, value: User) =>
     window.localStorage.setItem(key, JSON.stringify(value));
 
 const useStore = create<UserState>((set) => ({
-    userId: getLocalStorage('userId') || -1,
+    user: getLocalStorage('user') || {userId: -1, firstName: "", lastName: "", email: ""},
 
-    setUserId: (userId: number) => set(() => {
-        setLocalStorage('userId', userId)
-        return {userId: userId}
+    setUser: (user: User) => set(() => {
+        setLocalStorage('user', user)
+        return {user: user}
     }),
     // setUsers: (users: Array<User>) => set(() => {
     //     setLocalStorage('users', users)

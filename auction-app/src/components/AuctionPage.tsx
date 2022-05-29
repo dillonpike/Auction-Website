@@ -37,7 +37,6 @@ const AuctionPage = () => {
                 for (const category of response.data) {
                     if (category.categoryId === auction.categoryId) {
                         setCategory(category.name)
-                        console.log(category.name)
                         break
                     }
                 }
