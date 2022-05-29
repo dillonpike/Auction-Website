@@ -8,6 +8,7 @@ import {Visibility, VisibilityOff} from "@mui/icons-material";
 import FormControl from "@mui/material/FormControl";
 import {register, login} from "../api/api"
 import {useNavigate} from "react-router-dom";
+import {useUserStore} from "../store";
 
 interface State {
     firstName: string,
@@ -29,6 +30,7 @@ const RegisterPage = () => {
         error: ''
     });
     const navigate = useNavigate();
+    const setUserId = useUserStore(state => state.setUserId)
 
     const handleChange =
         (value: keyof State) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,8 +51,9 @@ const RegisterPage = () => {
     const handleRegister = () => {
         register(values.firstName, values.lastName, values.email, values.password)
             .then(() => {
-                login(values.email, values.password).then(() => {
+                login(values.email, values.password).then((response) => {
                     navigate('/')
+                    setUserId(response.data.userId)
                     }
                 )
             }, (error: any) => {

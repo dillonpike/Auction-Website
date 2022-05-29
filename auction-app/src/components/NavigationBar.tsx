@@ -14,8 +14,9 @@ import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import {Link, useNavigate} from "react-router-dom";
 import Cookies from "js-cookie";
-import {isLoggedIn, logout} from "../api/api";
-import {Alert, AlertColor, Snackbar} from "@mui/material";
+import {getUser, isLoggedIn, logout} from "../api/api";
+import {Alert, AlertColor, Grid, Snackbar} from "@mui/material";
+import {useUserStore} from "../store";
 
 const pages = ['Auctions'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
@@ -24,17 +25,29 @@ const NavigationBar = () => {
     const navigate = useNavigate();
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
-    const [userIsLoggedIn, setUserIsLoggedIn] = React.useState<boolean>(false);
+    const [userIsLoggedIn, setUserIsLoggedIn] = React.useState<boolean>(true);
     const [snackOpen, setSnackOpen] = React.useState(false)
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("error")
+    const [user, setUser] = React.useState<User>({userId: -1, firstName: "", lastName: "", email: ""})
+    const userId = useUserStore(state => state.userId)
 
     React.useEffect(() => {
-        isLoggedIn(Cookies.get('userId'))
+        isLoggedIn(userId)
             .then((result: boolean) => {
                 setUserIsLoggedIn(result)
+                if (result) {
+                    getUser(userId)
+                        .then((response) => {
+                            setUser(response)
+                        }, (error) => {
+                            setSnackMessage(`Failed to load user`)
+                            setSnackOpen(true)
+                            setSnackSeverity("error")
+                        })
+                }
             })
-    }, [setUserIsLoggedIn])
+    }, [userId])
 
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
@@ -107,38 +120,44 @@ const NavigationBar = () => {
 
     const user_profile = () => {
         return (
-            <Box sx={{ flexGrow: 0 }}>
-                <Tooltip title="Open settings">
-                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                        <Avatar
-                            src={`http://localhost:4941/api/v1/users/${Cookies.get('userId')}/image`}
-                            onError={(event: any) => {event.target.src = `https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg`}}
-                        />
-                    </IconButton>
-                </Tooltip>
-                <Menu
-                    sx={{ mt: '45px' }}
-                    id="menu-appbar"
-                    anchorEl={anchorElUser}
-                    anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    keepMounted
-                    transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    open={Boolean(anchorElUser)}
-                    onClose={handleCloseUserMenu}
-                >
-                    {settings.map((setting) => (
-                        <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                            <Typography textAlign="center">{setting}</Typography>
-                        </MenuItem>
-                    ))}
-                </Menu>
-            </Box>
+            <div>
+                <Grid container sx={{ flexGrow: 0 , display: "flex", alignItems: "center"}} spacing={1}>
+                    <Grid item xs={11}>
+                        <Typography>{user.firstName} {user.lastName}</Typography>
+                    </Grid>
+                    <Grid item xs={1}>
+                        <Tooltip title="Open settings">
+                            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                                <Avatar
+                                    src={`http://localhost:4941/api/v1/users/${userId}/image`}
+                                />
+                            </IconButton>
+                        </Tooltip>
+                        <Menu
+                            sx={{ mt: '45px' }}
+                            id="menu-appbar"
+                            anchorEl={anchorElUser}
+                            anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                            keepMounted
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                            open={Boolean(anchorElUser)}
+                            onClose={handleCloseUserMenu}
+                        >
+                            {settings.map((setting) => (
+                                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                                    <Typography textAlign="center">{setting}</Typography>
+                                </MenuItem>
+                            ))}
+                        </Menu>
+                    </Grid>
+                </Grid>
+            </div>
         )
     }
 

@@ -1,36 +1,38 @@
 import create from 'zustand';
 
 interface UserState {
-    loggedInUser: User[];
-    token: string;
-    setLoggedInUser: (users: Array<User>) => void;
-    editLoggedInUser: (user: User, newUsername: string) => void;
-    removeLoggedInUser: (user: User) => void;
+    userId: number;
+    setUserId: (userId: number) => void;
 }
 
-const getLocalStorage = (key: string): Array<User> =>
+const getLocalStorage = (key: string): number =>
     JSON.parse(window.localStorage.getItem(key) as string);
-const setLocalStorage = (key: string, value:Array<User>) =>
+const setLocalStorage = (key: string, value:number) =>
     window.localStorage.setItem(key, JSON.stringify(value));
 
-// const useStore = create<UserState>((set) => ({
-//     users: getLocalStorage('users') || [],
-//     setUsers: (users: Array<User>) => set(() => {
-//         setLocalStorage('users', users)
-//         return {users: users}
-//     }),
-//     editUser: (user: User, newUsername) => set((state) => {
-//         const temp = state.users.map(u => u.user_id === user.user_id ?
-//             ({...u, username: newUsername} as User): u)
-//         setLocalStorage('users', temp)
-//         return {users: temp}
-//     }),
-//     removeUser: (user: User) => set((state) => {
-//         setLocalStorage('users', state.users.filter(u => u.user_id !==
-//             user.user_id))
-//         return {users: state.users.filter(u => u.user_id !==
-//                 user.user_id)}
-//     })
-// }))
+const useStore = create<UserState>((set) => ({
+    userId: getLocalStorage('userId') || -1,
 
-// export const useUserStore = useStore;
+    setUserId: (userId: number) => set(() => {
+        setLocalStorage('userId', userId)
+        return {userId: userId}
+    }),
+    // setUsers: (users: Array<User>) => set(() => {
+    //     setLocalStorage('users', users)
+    //     return {users: users}
+    // }),
+    // editUser: (user: User, newUsername) => set((state) => {
+    //     const temp = state.users.map(u => u.user_id === user.user_id ?
+    //         ({...u, username: newUsername} as User): u)
+    //     setLocalStorage('users', temp)
+    //     return {users: temp}
+    // }),
+    // removeUser: (user: User) => set((state) => {
+    //     setLocalStorage('users', state.users.filter(u => u.user_id !==
+    //         user.user_id))
+    //     return {users: state.users.filter(u => u.user_id !==
+    //             user.user_id)}
+    // })
+}))
+
+export const useUserStore = useStore;

@@ -1,20 +1,20 @@
 import axios from "axios";
 import Cookies from 'js-cookie';
+import * as React from "react";
 
 const register = async (firstName: string, lastName: string, email: string, password: string): Promise<any> => {
     return await axios.post('http://localhost:4941/api/v1/users/register',
         { firstName: firstName, lastName: lastName, email: email, password: password })
 }
 
-const login = async (email: string, password: string): Promise<string> => {
+const login = async (email: string, password: string): Promise<any> => {
     return axios.post('http://localhost:4941/api/v1/users/login',
         { email: email, password: password })
         .then((response) => {
-            Cookies.set('userId', response.data.userId)
             Cookies.set('token', response.data.token)
-            return ''
+            return response
         }, (error) => {
-            return error.response.statusMessage
+            return error.response
         })
 }
 
@@ -24,16 +24,16 @@ const getUser = async (id: number): Promise<any> => {
         .then((response) => {
             return response.data
         }, (error) => {
-            return error.response.statusMessage
+            throw error
         })
 }
 
-const isLoggedIn = async (id: string | undefined): Promise<boolean> => {
+const isLoggedIn = async (id: number): Promise<boolean> => {
     try {
         if (Cookies.get('token') === undefined || id === undefined) {
             return false;
         }
-        return getUser(parseInt(id as string, 10)).then((data) => data.hasOwnProperty('email'))
+        return getUser(id).then((data) => data.hasOwnProperty('email'))
     } catch {
         return false;
     }
