@@ -30,6 +30,7 @@ const NavigationBar = () => {
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("error")
     const user = useUserStore(state => state.user)
+    const setUser = useUserStore(state => state.setUser)
 
     React.useEffect(() => {
         isLoggedIn(user.userId)

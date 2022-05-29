@@ -30,10 +30,10 @@ const getUser = async (id: number): Promise<any> => {
 
 const isLoggedIn = async (id: number): Promise<boolean> => {
     try {
-        if (Cookies.get('token') === undefined || id === undefined) {
+        if (Cookies.get('token') === undefined || id === -1) {
             return false;
         }
-        return getUser(id).then((data) => data.hasOwnProperty('email'))
+        return getUser(id).then((data) => data.hasOwnProperty('email'), (error) => false)
     } catch {
         return false;
     }
