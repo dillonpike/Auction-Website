@@ -18,7 +18,7 @@ import {getUser, isLoggedIn, logout} from "../api/api";
 import {Alert, AlertColor, Grid, Snackbar} from "@mui/material";
 import {useUserStore} from "../store";
 
-const pages = ['Auctions'];
+const pages = [['Auctions', '/'], ['Create Auction', '/create-auction']];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 const NavigationBar = () => {
@@ -205,8 +205,8 @@ const NavigationBar = () => {
                                 }}
                             >
                                 {pages.map((page) => (
-                                    <MenuItem key={page} onClick={handleCloseNavMenu}>
-                                        <Typography textAlign="center">{page}</Typography>
+                                    <MenuItem key={page[0]} onClick={handleCloseNavMenu}>
+                                        <Typography textAlign="center">{page[0]}</Typography>
                                     </MenuItem>
                                 ))}
                             </Menu>
@@ -232,13 +232,13 @@ const NavigationBar = () => {
                         </Typography>
                         <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                             {pages.map((page) => (
-                                <Link to="/">
+                                <Link to={page[1]}>
                                     <Button
-                                        key={page}
+                                        key={page[0]}
                                         onClick={handleCloseNavMenu}
                                         sx={{ my: 2, color: 'white', display: 'block' }}
                                     >
-                                        {page}
+                                        {page[0]}
                                     </Button>
                                 </Link>
                             ))}
