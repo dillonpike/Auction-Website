@@ -71,7 +71,7 @@ const AuctionPage = () => {
         axios.get('http://localhost:4941/api/v1/auctions',
             { params: { categoryIds: [auction.categoryId], sellerId: auction.sellerId }})
             .then((response) => {
-                setSimilarAuctions(response.data.auctions.filter((similarAuction: Auction) => auction.auctionId != similarAuction.auctionId))
+                setSimilarAuctions(response.data.auctions.filter((similarAuction: Auction) => auction.auctionId !== similarAuction.auctionId))
                 // setErrorFlag(false)
                 // setErrorMessage("")
             }, (error) => {
@@ -83,7 +83,7 @@ const AuctionPage = () => {
     React.useEffect(() => {
         getAuction()
         getBids()
-    }, [setAuction])
+    }, [setAuction, id])
 
     React.useEffect(() => {
         getCategory()
