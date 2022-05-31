@@ -112,7 +112,7 @@ const NavigationBar = () => {
         return (
             <div>
                 <Grid container sx={{ flexGrow: 0 , display: "flex", alignItems: "center"}} spacing={1}>
-                    <Grid item xs={11}>
+                    <Grid item xs={9}>
                         <Typography>{user.firstName} {user.lastName}</Typography>
                     </Grid>
                     <Grid item xs={1}>

@@ -59,25 +59,36 @@ const RegisterPage = () => {
         event.preventDefault();
     }
 
-    const handleRegister = () => {
-        register(values.firstName, values.lastName, values.email, values.password)
-            .then(() => {
-                login(values.email, values.password).then((response) => {
-                    navigate('/')
-                    const userId = response.data.userId
-                    getUser(response.data.userId).then((response) => {
-                        setUser({
-                            userId: userId,
-                            firstName: response.firstName,
-                            lastName: response.lastName,
-                            email: response.email})
-                    })
+    const isValidEmail = (email: string) => {
+        return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)
+    }
 
-                    }
-                )
-            }, (error: any) => {
-                setValues({...values, ['error']: error.response.statusText})
-            })
+    const handleRegister = () => {
+        if (values.password.length < 6) {
+            setValues({...values, ['error']: "Password must be at least 6 characters long"})
+        } else if (!isValidEmail(values.email)) {
+            setValues({...values, ['error']: "Email must be of the form a@a.a"})
+        } else {
+            register(values.firstName, values.lastName, values.email, values.password)
+                .then(() => {
+                    login(values.email, values.password).then((response) => {
+                            navigate('/')
+                            const userId = response.data.userId
+                            getUser(response.data.userId).then((response) => {
+                                setUser({
+                                    userId: userId,
+                                    firstName: response.firstName,
+                                    lastName: response.lastName,
+                                    email: response.email
+                                })
+                            })
+
+                        }
+                    )
+                }, (error: any) => {
+                    setValues({...values, ['error']: error.response.statusText})
+                })
+        }
     }
 
     return (
