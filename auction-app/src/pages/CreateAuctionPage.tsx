@@ -35,7 +35,8 @@ interface State {
     endDate: string,
     image: any,
     description: string,
-    reserve: number
+    reserve: number,
+    error: string
 }
 
 const CreateAuctionPage = () => {
@@ -52,7 +53,8 @@ const CreateAuctionPage = () => {
         endDate: '',
         image: null,
         description: '',
-        reserve: 1
+        reserve: 1,
+        error: ''
     });
 
     const navigate = useNavigate();
@@ -89,7 +91,9 @@ const CreateAuctionPage = () => {
     const handleEndDate = (date: Date | null) => {
         setEndDate(date);
         if (date !== null) {
-            setValues({...values, endDate: date.toISOString().replace('Z', '').replace('T', ' ')})
+            try {
+                setValues({...values, endDate: date.toISOString().replace('Z', '').replace('T', ' ')})
+            } catch {}
         }
     }
 
@@ -114,7 +118,6 @@ const CreateAuctionPage = () => {
                         setSnackSeverity("error")
                     })
             }, (error) => {
-                console.log(error.response)
                 setSnackMessage(`Failed to create auction`)
                 setSnackOpen(true)
                 setSnackSeverity("error")
@@ -207,6 +210,9 @@ const CreateAuctionPage = () => {
                         </Grid>
                         <Grid item xs={12}>
                             <TextField label="Reserve" variant="outlined" onChange={handleChange('reserve')} />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Typography color={"red"}>{values.error}</Typography>
                         </Grid>
                         <Grid item xs={12}>
                             <Button variant="contained" onClick={handleCreate}>Create Auction</Button>
