@@ -28,6 +28,7 @@ import AuctionListObject from "../components/AuctionListObject";
 import MenuItem from "@mui/material/MenuItem";
 import {SelectChangeEvent} from "@mui/material/Select";
 import Cookies from "js-cookie";
+import {add} from "date-fns";
 
 interface State {
     title: string,
@@ -36,26 +37,30 @@ interface State {
     image: any,
     description: string,
     reserve: number,
-    error: string
+    error: string,
 }
 
 const CreateAuctionPage = () => {
-
+    const initialDate = add(new Date(),{days: 7});
     const [snackOpen, setSnackOpen] = React.useState(false)
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("error")
     const [allCategories, setAllCategories] = React.useState<Array<Category>>([]);
-    const [endDate, setEndDate] = React.useState<Date | null>(null);
+    const [endDate, setEndDate] = React.useState<Date | null>(initialDate);
     const [imageUrl, setImageUrl] = React.useState<string>('');
     const [values, setValues] = React.useState<State>({
         title: '',
         categoryId: '1',
-        endDate: '',
+        endDate: initialDate.toISOString().replace('Z', '').replace('T', ' '),
         image: null,
         description: '',
         reserve: 1,
         error: ''
     });
+    const [titleError, setTitleError] = React.useState("")
+    const [endDateError, setEndDateError] = React.useState("")
+    const [descriptionError, setDescriptionError] = React.useState("")
+    const [imageError, setImageError] = React.useState("")
 
     const navigate = useNavigate();
     const user = useUserStore(state => state.user)
@@ -102,31 +107,64 @@ const CreateAuctionPage = () => {
             setValues({ ...values, [value]: event.target.value });
         };
 
+    const checkInput = (): boolean => {
+        let hasError = false;
+        if (values.title.length <= 0) {
+            setTitleError("Must not be empty.")
+            hasError = true;
+        } else {
+            setTitleError("")
+        }
+        if (values.description.length <= 0) {
+            setDescriptionError("Must not be empty.")
+            hasError = true
+        } else {
+            setDescriptionError("")
+        }
+        if (values.image === null) {
+            setImageError("Please upload an image.")
+            hasError = true
+        } else {
+            setImageError("")
+        }
+        return !hasError
+    }
+
     const handleCreate = () => {
-        axios.post('http://localhost:4941/api/v1/auctions',
-            { title: values.title, description: values.description, categoryId: parseInt(values.categoryId, 10),
-                endDate: values.endDate}, { headers: { 'X-Authorization': `${Cookies.get('token')}` }})
-            .then((response) => {
-                axios.put(`http://localhost:4941/api/v1/auctions/${response.data.auctionId}/image`,
-                    values.image, { headers: { 'X-Authorization': `${Cookies.get('token')}`, 'Content-Type': values.image.type }})
-                    .then((response2) => {
-                        navigate(`/auction/${response.data.auctionId}`)
-                    }, (error) => {
-                        navigate(`/auction/${response.data.auctionId}`)
-                        setSnackMessage(`Failed to upload image`)
-                        setSnackOpen(true)
-                        setSnackSeverity("error")
-                    })
-            }, (error) => {
-                setSnackMessage(`Failed to create auction`)
-                setSnackOpen(true)
-                setSnackSeverity("error")
-            })
+        if (checkInput()) {
+            axios.post('http://localhost:4941/api/v1/auctions',
+                {
+                    title: values.title, description: values.description, categoryId: parseInt(values.categoryId, 10),
+                    endDate: values.endDate
+                }, {headers: {'X-Authorization': `${Cookies.get('token')}`}})
+                .then((response) => {
+                    axios.put(`http://localhost:4941/api/v1/auctions/${response.data.auctionId}/image`,
+                        values.image, {
+                            headers: {
+                                'X-Authorization': `${Cookies.get('token')}`,
+                                'Content-Type': values.image.type
+                            }
+                        })
+                        .then((response2) => {
+                            navigate(`/auction/${response.data.auctionId}`)
+                        }, (error) => {
+                            navigate(`/auction/${response.data.auctionId}`)
+                            setSnackMessage(`Failed to upload image`)
+                            setSnackOpen(true)
+                            setSnackSeverity("error")
+                        })
+                }, (error) => {
+                    setSnackMessage(`Failed to create auction`)
+                    setSnackOpen(true)
+                    setSnackSeverity("error")
+                })
+        }
     }
 
     const handleImage = (event: any) => {
         setImageUrl(URL.createObjectURL(event.target.files[0]));
         setValues({ ...values, image: event.target.files[0] });
+        setImageError("")
     }
 
     const handleSnackClose = (event?: React.SyntheticEvent | Event,
@@ -169,6 +207,7 @@ const CreateAuctionPage = () => {
                     <Grid item xs={12}>
                         <label htmlFor="imageInput">
                             <input id="imageInput" multiple accept="image/jpg, image/png, image/gif" type="file" style={{ display: "none"}} onChange={handleImage}/>
+                            <Typography color={"red"}>{imageError}</Typography>
                             <Button component="span" variant="contained">Upload Image</Button>
                         </label>
                     </Grid>
@@ -176,16 +215,22 @@ const CreateAuctionPage = () => {
                 <Grid item xs={6}>
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
-                            <TextField label="Title" variant="outlined" onChange={handleChange('title')} />
+                            <TextField label="Title"
+                                       variant="outlined"
+                                       onChange={handleChange('title')}
+                                       error={titleError !== "" && values.title === ""}
+                                       helperText={titleError !== "" && values.title === "" ? titleError : ""}
+                                       required
+                            />
                         </Grid>
                         <Grid item xs={12}>
                             <FormControl sx={{minWidth: '25ch' }}>
-                                <InputLabel id="demo-simple-select-label">Category</InputLabel>
+                                <InputLabel id="demo-simple-select-label">Category *</InputLabel>
                                 <Select
                                     labelId="demo-simple-select-label"
                                     id="demo-simple-select"
                                     value={values.categoryId}
-                                    label="Category"
+                                    label="Category *"
                                     onChange={handleCategory}
                                 >
                                     {categories()}
@@ -195,7 +240,7 @@ const CreateAuctionPage = () => {
                         <Grid item xs={12}>
                             <LocalizationProvider dateAdapter={AdapterDateFns}>
                                 <DateTimePicker
-                                    label="End Date"
+                                    label="End Date *"
                                     value={endDate}
                                     onChange={(newValue) => {
                                         handleEndDate(newValue);
@@ -206,10 +251,15 @@ const CreateAuctionPage = () => {
                             </LocalizationProvider>
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Description" variant="outlined" onChange={handleChange('description')} />
+                            <TextField label="Description" variant="outlined" onChange={handleChange('description')}
+                                       error={descriptionError !== "" && values.description === ""}
+                                       helperText={descriptionError !== "" && values.description === "" ? descriptionError : ""}
+                                       required
+                            />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Reserve" variant="outlined" onChange={handleChange('reserve')} />
+                            <TextField label="Reserve" variant="outlined" onChange={handleChange('reserve')}
+                            />
                         </Grid>
                         <Grid item xs={12}>
                             <Typography color={"red"}>{values.error}</Typography>
