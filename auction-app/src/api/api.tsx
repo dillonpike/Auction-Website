@@ -1,6 +1,7 @@
 import axios from "axios";
 import Cookies from 'js-cookie';
 import * as React from "react";
+import {useNavigate} from "react-router-dom";
 
 const register = async (firstName: string, lastName: string, email: string, password: string): Promise<any> => {
     return await axios.post('http://localhost:4941/api/v1/users/register',
@@ -51,4 +52,24 @@ const logout = async (): Promise<boolean> => {
         })
 }
 
-export {register, login, getUser, isLoggedIn, logout};
+const getAuction = async (id: number | string) => {
+    return await axios.get(`http://localhost:4941/api/v1/auctions/${id}`)
+}
+
+const getAuctionImage = async (id: number | string) => {
+    return await axios.get(`http://localhost:4941/api/v1/auctions/${id}/image`)
+}
+
+const editAuction = async (id: number | string, title: string, description: string, categoryId: number, endDate: string, reserve: number) => {
+    return await axios.patch(`http://localhost:4941/api/v1/auctions/${id}`, { title: title,
+            description: description, categoryId: categoryId, endDate: endDate, reserve: reserve },
+        { headers: { 'X-Authorization': `${Cookies.get('token')}` }})
+}
+
+const editAuctionImage = async (id: number | string, image: any) => {
+    console.log(image)
+    return await axios.put(`http://localhost:4941/api/v1/auctions/${id}/image`, image,
+        { headers: { 'X-Authorization': `${Cookies.get('token')}`, 'Content-Type': image.type }})
+}
+
+export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage};

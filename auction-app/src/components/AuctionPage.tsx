@@ -1,12 +1,14 @@
 import React from 'react';
 import { useParams } from "react-router";
-import {Box, Card, CardContent, CardMedia, Grid, Typography} from "@mui/material";
+import {Box, Card, CardContent, CardMedia, Grid, Stack, Typography} from "@mui/material";
 import UserListObject from "./UserListObject";
 import CSS from "csstype";
 import axios from "axios";
 import BidderListObject from "./BidderListObject";
 import AuctionListObject from "./AuctionListObject";
 import NavigationBar from "./NavigationBar";
+import {isLoggedIn} from "../api/api";
+import Button from "@mui/material/Button";
 
 const AuctionPage = () => {
 
@@ -29,6 +31,7 @@ const AuctionPage = () => {
     const [allCategories, setAllCategories] = React.useState<Array<Category>>([]);
     const [category, setCategory] = React.useState("")
     const [bids, setBids] = React.useState<Array<Bid>>([])
+    const [allowEdit, setAllowEdit] = React.useState(false)
 
     const getCategory = () => {
         axios.get('http://localhost:4941/api/v1/auctions/categories')
@@ -69,14 +72,19 @@ const AuctionPage = () => {
 
     const getSimilarAuctions = () => {
         axios.get('http://localhost:4941/api/v1/auctions',
-            { params: { categoryIds: [auction.categoryId], sellerId: auction.sellerId }})
+            {params: {categoryIds: [auction.categoryId]}})
             .then((response) => {
-                setSimilarAuctions(response.data.auctions.filter((similarAuction: Auction) => auction.auctionId !== similarAuction.auctionId))
-                // setErrorFlag(false)
-                // setErrorMessage("")
-            }, (error) => {
-                // setErrorFlag(true)
-                // setErrorMessage(error.toString())
+                const sameCategoryAuctions = response.data.auctions.filter((similarAuction: Auction) => auction.auctionId !== similarAuction.auctionId)
+                const sameCategoryIds = sameCategoryAuctions.map((similarAuction: Auction) => similarAuction.auctionId)
+                axios.get('http://localhost:4941/api/v1/auctions',
+                    {params: {sellerId: auction.sellerId}})
+                    .then((sellerResponse) => {
+                        const sameSellerAuctions = sellerResponse.data.auctions.filter((similarAuction: Auction) =>
+                            auction.auctionId !== similarAuction.auctionId && !sameCategoryIds.includes(similarAuction.auctionId))
+                        console.log(sameCategoryAuctions)
+                        console.log(sameCategoryIds)
+                        setSimilarAuctions(sameCategoryAuctions.concat(sameSellerAuctions))
+                    })
             })
     }
 
@@ -85,9 +93,16 @@ const AuctionPage = () => {
         getBids()
     }, [setAuction, id])
 
+
     React.useEffect(() => {
         getCategory()
         getSimilarAuctions()
+        isLoggedIn(auction.sellerId)
+            .then((result: boolean) => {
+                if (result) {
+                    setAllowEdit(true)
+                }
+            })
     }, [auction])
 
     const getEndDateString = () => {
@@ -113,7 +128,10 @@ const AuctionPage = () => {
         } else {
             return <Typography variant="subtitle1">No similar auctions</Typography>
         }
+    }
 
+    const edit_button = () => {
+        return allowEdit ? <Button href={`/edit-auction/${id}`} variant="contained" >Edit Auction</Button> : null
     }
 
     const auctionCardStyles: CSS.Properties = {
@@ -143,19 +161,28 @@ const AuctionPage = () => {
                         {similar_auctions_list()}
                     </Grid>
                     <Grid item xs={6}>
-                        <Card sx={auctionCardStyles}>
-                            <CardContent>
-                                <Typography variant="h5" component="div">{auction.title}</Typography>
-                                <Typography variant="subtitle1" component="div">Closes on: {getEndDateString()}</Typography>
-                                <Typography variant="subtitle1">Category: {category}</Typography>
-                                <Typography variant="subtitle1">Description: {auction.description}</Typography>
-                                <Typography variant="subtitle1">Reserve: {auction.reserve}</Typography>
-                                <Typography variant="subtitle1">Number of bids: {auction.numBids}</Typography>
-                                <UserListObject key={auction.sellerId} userId={auction.sellerId}/>
-                            </CardContent>
-                        </Card>
-                        <Typography variant="h5" component="div">Bidders</Typography>
-                        {bidder_list()}
+                        <Grid container spacing={1}>
+                            <Grid item xs={12}>
+                                <Card sx={auctionCardStyles}>
+                                    <CardContent>
+                                        <Typography variant="h5" component="div">{auction.title}</Typography>
+                                        <Typography variant="subtitle1" component="div">Closes on: {getEndDateString()}</Typography>
+                                        <Typography variant="subtitle1">Category: {category}</Typography>
+                                        <Typography variant="subtitle1">Description: {auction.description}</Typography>
+                                        <Typography variant="subtitle1">Reserve: {auction.reserve}</Typography>
+                                        <Typography variant="subtitle1">Number of bids: {auction.numBids}</Typography>
+                                        <UserListObject key={auction.sellerId} userId={auction.sellerId}/>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid item xs={12}>
+                                {edit_button()}
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography variant="h5" component="div">Bidders</Typography>
+                                {bidder_list()}
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Box>

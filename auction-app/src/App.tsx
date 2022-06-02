@@ -18,6 +18,7 @@ function App() {
               <Route path="/login" element={<LoginPage/>}/>
               <Route path="/register" element={<RegisterPage/>}/>
               <Route path="/create-auction" element={<CreateAuctionPage/>}/>
+              <Route path="/edit-auction/:id" element={<CreateAuctionPage/>}/>
             </Routes>
           </div>
         </Router>

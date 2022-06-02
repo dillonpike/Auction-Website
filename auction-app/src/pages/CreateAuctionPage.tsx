@@ -2,7 +2,7 @@ import React from 'react';
 import NavigationBar from "../components/NavigationBar";
 import {
     Alert, AlertColor,
-    Box,
+    Box, Card, CardMedia,
     FilledInput,
     Grid,
     InputAdornment,
@@ -17,7 +17,16 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
 import FormControl from "@mui/material/FormControl";
-import {register, login, getUser, isLoggedIn} from "../api/api"
+import {
+    register,
+    login,
+    getUser,
+    isLoggedIn,
+    getAuction,
+    getAuctionImage,
+    editAuction,
+    editAuctionImage
+} from "../api/api"
 import {useNavigate} from "react-router-dom";
 import {useUserStore} from "../store";
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -29,6 +38,8 @@ import MenuItem from "@mui/material/MenuItem";
 import {SelectChangeEvent} from "@mui/material/Select";
 import Cookies from "js-cookie";
 import {add} from "date-fns";
+import CSS from "csstype";
+import {useParams} from "react-router";
 
 interface State {
     title: string,
@@ -41,6 +52,8 @@ interface State {
 }
 
 const CreateAuctionPage = () => {
+
+    const { id } = useParams();
     const initialDate = add(new Date(),{days: 7});
     const [snackOpen, setSnackOpen] = React.useState(false)
     const [snackMessage, setSnackMessage] = React.useState("")
@@ -67,13 +80,44 @@ const CreateAuctionPage = () => {
     const setUser = useUserStore(state => state.setUser)
 
     React.useEffect(() => {
-        isLoggedIn(user.userId)
+        if (id === undefined) {
+            checkRedirectToHome(user.userId)
+        } else {
+            getAuction(id)
+                .then((response) => {
+                    if (response.data.sellerId !== user.userId || response.data.numBids > 0) {
+                        navigate("/")
+                    }
+                    getAuctionImage(id).then((imageResponse) => {
+                        setValues({ ...values, title: response.data.title, description: response.data.description,
+                            reserve: response.data.reserve, categoryId: response.data.categoryId,
+                            endDate: response.data.endDate.replace('Z', '').replace('T', ' '), image: imageResponse.data })
+                        setEndDate(response.data.endDate)
+                        setImageUrl(`http://localhost:4941/api/v1/auctions/${id}/image`)
+                    }, (error) => {
+                        openErrorSnack("Failed to load details")
+                    })
+                }, (error) => {
+                    navigate("/")
+                })
+        }
+    }, [user, id])
+
+    const checkRedirectToHome = (id: number) => {
+        isLoggedIn(id)
             .then((result: boolean) => {
                 if (!result) {
                     navigate("/")
                 }
             })
-    }, [user])
+    }
+
+    const openErrorSnack = (message: string) => {
+        setSnackMessage(message)
+        setSnackOpen(true)
+        setSnackSeverity("error")
+    }
+
 
     const getAllCategories = () => {
         axios.get('http://localhost:4941/api/v1/auctions/categories')
@@ -138,25 +182,29 @@ const CreateAuctionPage = () => {
                     endDate: values.endDate
                 }, {headers: {'X-Authorization': `${Cookies.get('token')}`}})
                 .then((response) => {
-                    axios.put(`http://localhost:4941/api/v1/auctions/${response.data.auctionId}/image`,
-                        values.image, {
-                            headers: {
-                                'X-Authorization': `${Cookies.get('token')}`,
-                                'Content-Type': values.image.type
-                            }
-                        })
-                        .then((response2) => {
+                    editAuctionImage(response.data.auctionId, values.image)
+                        .then((imageResponse) => {
                             navigate(`/auction/${response.data.auctionId}`)
                         }, (error) => {
                             navigate(`/auction/${response.data.auctionId}`)
-                            setSnackMessage(`Failed to upload image`)
-                            setSnackOpen(true)
-                            setSnackSeverity("error")
                         })
                 }, (error) => {
-                    setSnackMessage(`Failed to create auction`)
-                    setSnackOpen(true)
-                    setSnackSeverity("error")
+                    openErrorSnack("Failed to create auction")
+                })
+        }
+    }
+
+    const handleEdit = () => {
+        if (checkInput() && id !== undefined) {
+            editAuction(id, values.title, values.description, parseInt(values.categoryId, 10), values.endDate, values.reserve)
+                .then((response) => {
+                    editAuctionImage(id, values.image).then((imageResponse) => {
+                        navigate(`/auction/${id}`)
+                    }, (error) => {
+                        navigate(`/auction/${id}`)
+                    })
+                }, (error) => {
+                    openErrorSnack("Failed to save auction")
                 })
         }
     }
@@ -191,6 +239,20 @@ const CreateAuctionPage = () => {
         )
     }
 
+    const confirm_button = () => {
+        if (id === undefined) {
+            return <Button variant="contained" onClick={handleCreate}>Create Auction</Button>
+        } else {
+            return <Button variant="contained" onClick={handleEdit}>Save Auction</Button>
+        }
+    }
+
+    const auctionCardStyles: CSS.Properties = {
+        display: "inline-block",
+        margin: "10px",
+        padding: "0px",
+    }
+
     return (
         <Box>
             <NavigationBar/>
@@ -198,11 +260,16 @@ const CreateAuctionPage = () => {
             <Grid container spacing={2}>
                 <Grid item xs={6}>
                     <Grid item xs={12}>
-                        <img
-                            src={imageUrl}
-                            onError={(event: any) => {event.target.src = `https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg`}}
-                            style={{ maxHeight: 1000, maxWidth: 1000 }}
-                        />
+                        <Card sx={auctionCardStyles}>
+                            <CardMedia
+                                component="img"
+                                height="500"
+                                width="500"
+                                sx={{objectFit:"contain"}}
+                                image={imageUrl === "" ? "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg" : imageUrl}
+                                alt="Auction hero"
+                            />
+                        </Card>
                     </Grid>
                     <Grid item xs={12}>
                         <label htmlFor="imageInput">
@@ -217,6 +284,7 @@ const CreateAuctionPage = () => {
                         <Grid item xs={12}>
                             <TextField label="Title"
                                        variant="outlined"
+                                       value={values.title}
                                        onChange={handleChange('title')}
                                        error={titleError !== "" && values.title === ""}
                                        helperText={titleError !== "" && values.title === "" ? titleError : ""}
@@ -254,18 +322,18 @@ const CreateAuctionPage = () => {
                             <TextField label="Description" variant="outlined" onChange={handleChange('description')}
                                        error={descriptionError !== "" && values.description === ""}
                                        helperText={descriptionError !== "" && values.description === "" ? descriptionError : ""}
-                                       required
+                                       required value={values.description}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Reserve" variant="outlined" onChange={handleChange('reserve')}
+                            <TextField label="Reserve" variant="outlined" value={values.reserve} onChange={handleChange('reserve')}
                             />
                         </Grid>
                         <Grid item xs={12}>
                             <Typography color={"red"}>{values.error}</Typography>
                         </Grid>
                         <Grid item xs={12}>
-                            <Button variant="contained" onClick={handleCreate}>Create Auction</Button>
+                            {confirm_button()}
                         </Grid>
                     </Grid>
                 </Grid>
