@@ -51,13 +51,15 @@ interface State {
     error: string,
 }
 
-const CreateAuctionPage = () => {
+interface ISnackProps {
+    handleSnackSuccess: Function,
+    handleSnackError: Function
+}
+
+const CreateAuctionPage = (props: ISnackProps) => {
 
     const { id } = useParams();
     const initialDate = add(new Date(),{days: 7});
-    const [snackOpen, setSnackOpen] = React.useState(false)
-    const [snackMessage, setSnackMessage] = React.useState("")
-    const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("error")
     const [allCategories, setAllCategories] = React.useState<Array<Category>>([]);
     const [endDate, setEndDate] = React.useState<Date | null>(initialDate);
     const [imageUrl, setImageUrl] = React.useState<string>('');
@@ -97,11 +99,12 @@ const CreateAuctionPage = () => {
                     getAuctionImage(id).then((imageResponse) => {
                         setValues({ ...values, title: response.data.title, description: response.data.description,
                             reserve: response.data.reserve, categoryId: response.data.categoryId,
-                            endDate: response.data.endDate.replace('Z', '').replace('T', ' '), image: imageResponse.data })
+                            endDate: response.data.endDate.replace('Z', '').replace('T', ' '),
+                            image: imageResponse.data })
                         setEndDate(response.data.endDate)
                         setImageUrl(`http://localhost:4941/api/v1/auctions/${id}/image`)
                     }, (error) => {
-                        openErrorSnack("Failed to load details")
+                        props.handleSnackError("Failed to load details")
                     })
                 }, (error) => {
                     navigate("/")
@@ -116,12 +119,6 @@ const CreateAuctionPage = () => {
                     navigate("/")
                 }
             })
-    }
-
-    const openErrorSnack = (message: string) => {
-        setSnackMessage(message)
-        setSnackOpen(true)
-        setSnackSeverity("error")
     }
 
 
@@ -197,11 +194,13 @@ const CreateAuctionPage = () => {
                     editAuctionImage(response.data.auctionId, values.image)
                         .then((imageResponse) => {
                             navigate(`/auction/${response.data.auctionId}`)
+                            props.handleSnackSuccess(`Created ${values.title} auction`)
                         }, (error) => {
                             navigate(`/auction/${response.data.auctionId}`)
+                            props.handleSnackError("Failed to upload image")
                         })
                 }, (error) => {
-                    openErrorSnack("Failed to create auction")
+                    props.handleSnackError("Failed to create auction")
                 })
         }
     }
@@ -211,13 +210,20 @@ const CreateAuctionPage = () => {
             editAuction(id, values.title, values.description, parseInt(values.categoryId, 10), values.endDate,
                 values.reserve.toString() === "" ? 1 : values.reserve)
                 .then((response) => {
-                    editAuctionImage(id, values.image).then((imageResponse) => {
+                    if (values.image.type !== undefined) {
+                        editAuctionImage(id, values.image).then((imageResponse) => {
+                            navigate(`/auction/${id}`)
+                            props.handleSnackSuccess(`Saved ${values.title} auction`)
+                        }, (error) => {
+                            navigate(`/auction/${id}`)
+                            props.handleSnackError("Failed to upload image")
+                        })
+                    } else {
                         navigate(`/auction/${id}`)
-                    }, (error) => {
-                        navigate(`/auction/${id}`)
-                    })
+                        props.handleSnackSuccess(`Saved ${values.title} auction`)
+                    }
                 }, (error) => {
-                    openErrorSnack("Failed to save auction")
+                    props.handleSnackError("Failed to save auction")
                 })
         }
     }
@@ -226,30 +232,6 @@ const CreateAuctionPage = () => {
         setImageUrl(URL.createObjectURL(event.target.files[0]));
         setValues({ ...values, image: event.target.files[0] });
         setImageError("")
-    }
-
-    const handleSnackClose = (event?: React.SyntheticEvent | Event,
-                              reason?: string) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setSnackOpen(false);
-    };
-
-    const snackbar = () => {
-        return (
-            <Snackbar
-                autoHideDuration={6000}
-                open={snackOpen}
-                onClose={handleSnackClose}
-                key={snackMessage}
-            >
-                <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
-                    width: '100%' }}>
-                    {snackMessage}
-                </Alert>
-            </Snackbar>
-        )
     }
 
     const confirm_button = () => {
@@ -353,7 +335,6 @@ const CreateAuctionPage = () => {
                     </Grid>
                 </Grid>
             </Grid>
-            {snackbar()}
         </Box>
     )
 }
