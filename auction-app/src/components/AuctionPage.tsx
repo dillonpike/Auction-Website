@@ -23,7 +23,12 @@ const style = {
     p: 4
 };
 
-const AuctionPage = () => {
+interface ISnackProps {
+    handleSnackSuccess: Function,
+    handleSnackError: Function
+}
+
+const AuctionPage = (props: ISnackProps) => {
 
     const defaultAuction : Auction = {
         auctionId: 0,
@@ -183,7 +188,9 @@ const AuctionPage = () => {
     const handleDelete = () => {
         deleteAuction(auction.auctionId).then((response) => {
             navigate("/")
+            props.handleSnackSuccess(`Deleted ${auction.title} auction`)
         }, (error) => {
+            props.handleSnackError("Failed to delete auction")
         })
     }
 
