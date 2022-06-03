@@ -71,4 +71,9 @@ const editAuctionImage = async (id: number | string, image: any) => {
         { headers: { 'X-Authorization': `${Cookies.get('token')}`, 'Content-Type': image.type }})
 }
 
-export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage};
+const deleteAuction = async (id: number) => {
+    return await axios.delete(`http://localhost:4941/api/v1/auctions/${id}`,
+        { headers: { 'X-Authorization': `${Cookies.get('token')}` }})
+}
+
+export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage, deleteAuction};
