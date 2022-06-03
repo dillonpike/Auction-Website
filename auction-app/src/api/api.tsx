@@ -76,4 +76,9 @@ const deleteAuction = async (id: number) => {
         { headers: { 'X-Authorization': `${Cookies.get('token')}` }})
 }
 
-export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage, deleteAuction};
+const placeBid = async (id: number, amount: number) => {
+    return await axios.post(`http://localhost:4941/api/v1/auctions/${id}/bids`, { amount: amount},
+        { headers: { 'X-Authorization': `${Cookies.get('token')}` }})
+}
+
+export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage, deleteAuction, placeBid};

@@ -95,6 +95,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                 .then((response) => {
                     if (response.data.sellerId !== user.userId || response.data.numBids > 0) {
                         navigate("/")
+                        props.handleSnackError("You cannot edit someone else's auction")
                     }
                     getAuctionImage(id).then((imageResponse) => {
                         setValues({ ...values, title: response.data.title, description: response.data.description,
@@ -117,6 +118,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
             .then((result: boolean) => {
                 if (!result) {
                     navigate("/")
+                    props.handleSnackError("You must be logged in to create an auction")
                 }
             })
     }

@@ -1,15 +1,16 @@
 import React from 'react';
 import { useParams } from "react-router";
-import {Box, Card, CardContent, CardMedia, Grid, Modal, Stack, Typography} from "@mui/material";
+import {Box, Card, CardContent, CardMedia, Grid, Modal, Stack, TextField, Typography} from "@mui/material";
 import UserListObject from "./UserListObject";
 import CSS from "csstype";
 import axios from "axios";
 import BidderListObject from "./BidderListObject";
 import AuctionListObject from "./AuctionListObject";
 import NavigationBar from "./NavigationBar";
-import {deleteAuction, isLoggedIn} from "../api/api";
+import {deleteAuction, isLoggedIn, placeBid} from "../api/api";
 import Button from "@mui/material/Button";
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
+import {useUserStore} from "../store";
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -50,6 +51,11 @@ const AuctionPage = (props: ISnackProps) => {
     const [category, setCategory] = React.useState("")
     const [bids, setBids] = React.useState<Array<Bid>>([])
     const [allowEdit, setAllowEdit] = React.useState(false)
+    const [allowBid, setAllowBid] = React.useState(true)
+    const [loggedIn, setLoggedIn] = React.useState(false)
+    const [bidAmount, setBidAmount] = React.useState(1)
+    const [bidAmountError, setBidAmountError] = React.useState("")
+    const user = useUserStore(state => state.user)
     const navigate = useNavigate();
 
     const getCategory = () => {
@@ -100,8 +106,6 @@ const AuctionPage = (props: ISnackProps) => {
                     .then((sellerResponse) => {
                         const sameSellerAuctions = sellerResponse.data.auctions.filter((similarAuction: Auction) =>
                             auction.auctionId !== similarAuction.auctionId && !sameCategoryIds.includes(similarAuction.auctionId))
-                        console.log(sameCategoryAuctions)
-                        console.log(sameCategoryIds)
                         setSimilarAuctions(sameCategoryAuctions.concat(sameSellerAuctions))
                     })
             })
@@ -116,13 +120,25 @@ const AuctionPage = (props: ISnackProps) => {
     React.useEffect(() => {
         getCategory()
         getSimilarAuctions()
-        if (auction.numBids === 0) {
-            isLoggedIn(auction.sellerId)
-                .then((result: boolean) => {
-                    if (result) {
-                        setAllowEdit(true)
+        setAllowEdit(false)
+        setAllowBid(true)
+        setBidAmount(auction.highestBid + 1)
+        isLoggedIn(user.userId)
+            .then((result: boolean) => {
+                if (result) {
+                    setLoggedIn(true)
+                    if (auction.sellerId === user.userId) {
+                        if (auction.numBids === 0) {
+                            setAllowEdit(true)
+                        }
+                        setAllowBid(false)
                     }
-                })
+                }
+            })
+        const endDate = new Date(auction.endDate)
+        const now = new Date()
+        if (endDate.getTime() - now.getTime() <= 0) {
+            setAllowBid(false)
         }
     }, [auction])
 
@@ -152,22 +168,41 @@ const AuctionPage = (props: ISnackProps) => {
     }
 
     const edit_button = () => {
-        return allowEdit ? <Button href={`/edit-auction/${id}`} variant="contained" >Edit Auction</Button> : null
+        return (
+            <Link to={`/edit-auction/${id}`}>
+                <Button variant="contained" >Edit Auction</Button>
+            </Link>
+        )
     }
 
     const delete_button = () => {
-        return allowEdit ? <Button color="error" variant="contained" onClick={handleOpen} >Delete Auction</Button> : null
+        return <Button color="error" variant="contained" onClick={handleDeleteModalOpen} >Delete Auction</Button>
     }
 
-    const [open, setOpen] = React.useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+    const bid_button = () => {
+        return <Button onClick={handleBidModalOpen} variant="contained" >Place bid</Button>
+    }
+
+    const [deleteModalOpen, setDeleteModalOpen] = React.useState(false)
+    const handleDeleteModalOpen = () => setDeleteModalOpen(true)
+    const handleDeleteModalClose = () => setDeleteModalOpen(false)
+
+    const [bidModalOpen, setBidModalOpen] = React.useState(false)
+    const handleBidModalOpen = () => {
+        if (!loggedIn) {
+            props.handleSnackError("You must be logged in to place a bid")
+            setBidModalOpen(false)
+        } else {
+            setBidModalOpen(true)
+        }
+    }
+    const handleBidModalClose = () => setBidModalOpen(false)
 
     const delete_modal = () => {
         return (
             <Modal
-                open={open}
-                onClose={handleClose}
+                open={deleteModalOpen}
+                onClose={handleDeleteModalClose}
             >
                 <Box sx={style}>
                     <Grid container spacing={2}>
@@ -185,6 +220,32 @@ const AuctionPage = (props: ISnackProps) => {
         )
     }
 
+    const handleBidAmount = (event: any) => {
+        setBidAmount(event.target.value)
+    }
+
+    const bid_modal = () => {
+        return (
+            <Modal
+                open={bidModalOpen}
+                onClose={handleBidModalClose}
+            >
+                <Box sx={style}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                            <TextField label="Amount" variant="outlined" value={bidAmount} onChange={handleBidAmount}
+                                       error={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount))))}
+                                       helperText={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount)))) ? bidAmountError : ""}/>
+                        </Grid>
+                        <Grid item xs={12} style={{justifyContent: 'center'}}>
+                            <Button variant="contained" onClick={handleBid}>Place Bid</Button>
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Modal>
+        )
+    }
+
     const handleDelete = () => {
         deleteAuction(auction.auctionId).then((response) => {
             navigate("/")
@@ -192,6 +253,27 @@ const AuctionPage = (props: ISnackProps) => {
         }, (error) => {
             props.handleSnackError("Failed to delete auction")
         })
+    }
+
+    const checkBidAmount = () => {
+        if (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount)))) {
+            setBidAmountError(`Must be a positive whole number greater than the highest bid ($${auction.highestBid})`)
+            return false
+        }
+        setBidAmountError("")
+        return true
+    }
+
+    const handleBid = () => {
+        if (checkBidAmount()) {
+            placeBid(auction.auctionId, parseInt(String(bidAmount), 10)).then((response) => {
+                getBids()
+                handleBidModalClose()
+                props.handleSnackSuccess(`Placed bid`)
+            }, (error) => {
+                props.handleSnackError("Failed to place bid")
+            })
+        }
     }
 
     const auctionCardStyles: CSS.Properties = {
@@ -236,14 +318,16 @@ const AuctionPage = (props: ISnackProps) => {
                                 </Card>
                             </Grid>
                             <Grid item xs={12}>
-                                {edit_button()}
+                                {allowEdit ? edit_button() : <div/>}
                             </Grid>
                             <Grid item xs={12}>
-                                {delete_button()}
+                                {allowEdit ? delete_button() : <div/>}
                                 {delete_modal()}
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography variant="h5" component="div">Bidders</Typography>
+                                {allowBid ? bid_button() : <div/>}
+                                {bid_modal()}
                                 {bidder_list()}
                             </Grid>
                         </Grid>
