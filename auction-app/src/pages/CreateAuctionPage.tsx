@@ -74,6 +74,7 @@ const CreateAuctionPage = () => {
     const [endDateError, setEndDateError] = React.useState("")
     const [descriptionError, setDescriptionError] = React.useState("")
     const [imageError, setImageError] = React.useState("")
+    const [reserveError, setReserveError] = React.useState("")
 
     const navigate = useNavigate();
     const user = useUserStore(state => state.user)
@@ -82,6 +83,11 @@ const CreateAuctionPage = () => {
     React.useEffect(() => {
         if (id === undefined) {
             checkRedirectToHome(user.userId)
+            setValues({ ...values, title: "", description: "",
+                reserve: 1, categoryId: '1',
+                endDate: initialDate.toISOString().replace('Z', '').replace('T', ' '),
+                image: null })
+            setImageUrl('')
         } else {
             getAuction(id)
                 .then((response) => {
@@ -171,6 +177,12 @@ const CreateAuctionPage = () => {
         } else {
             setImageError("")
         }
+        if (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1)) {
+            setReserveError("Must be a whole number $1 or more.")
+            hasError = true
+        } else {
+            setReserveError("")
+        }
         return !hasError
     }
 
@@ -179,7 +191,7 @@ const CreateAuctionPage = () => {
             axios.post('http://localhost:4941/api/v1/auctions',
                 {
                     title: values.title, description: values.description, categoryId: parseInt(values.categoryId, 10),
-                    endDate: values.endDate
+                    endDate: values.endDate, reserve: values.reserve.toString() === "" ? 1 : values.reserve
                 }, {headers: {'X-Authorization': `${Cookies.get('token')}`}})
                 .then((response) => {
                     editAuctionImage(response.data.auctionId, values.image)
@@ -196,7 +208,8 @@ const CreateAuctionPage = () => {
 
     const handleEdit = () => {
         if (checkInput() && id !== undefined) {
-            editAuction(id, values.title, values.description, parseInt(values.categoryId, 10), values.endDate, values.reserve)
+            editAuction(id, values.title, values.description, parseInt(values.categoryId, 10), values.endDate,
+                values.reserve.toString() === "" ? 1 : values.reserve)
                 .then((response) => {
                     editAuctionImage(id, values.image).then((imageResponse) => {
                         navigate(`/auction/${id}`)
@@ -327,6 +340,8 @@ const CreateAuctionPage = () => {
                         </Grid>
                         <Grid item xs={12}>
                             <TextField label="Reserve" variant="outlined" value={values.reserve} onChange={handleChange('reserve')}
+                                       error={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1))}
+                                       helperText={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1)) ? reserveError : ""}
                             />
                         </Grid>
                         <Grid item xs={12}>

@@ -67,7 +67,6 @@ const editAuction = async (id: number | string, title: string, description: stri
 }
 
 const editAuctionImage = async (id: number | string, image: any) => {
-    console.log(image)
     return await axios.put(`http://localhost:4941/api/v1/auctions/${id}/image`, image,
         { headers: { 'X-Authorization': `${Cookies.get('token')}`, 'Content-Type': image.type }})
 }
