@@ -16,7 +16,7 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
 import FormControl from "@mui/material/FormControl";
-import {register, login, getUser, isLoggedIn, editUserImage} from "../api/api"
+import {register, login, getUser, isLoggedIn, editUserImage, deleteUserImage} from "../api/api"
 import {useNavigate} from "react-router-dom";
 import {useUserStore} from "../store";
 import CSS from "csstype";
@@ -87,7 +87,7 @@ const RegisterPage = (props: ISnackProps) => {
         if (values.password.length < 6) {
             setValues({...values, ['error']: "Password must be at least 6 characters long"})
         } else if (!isValidEmail(values.email)) {
-            setValues({...values, ['error']: "Email must be of the form a@a.a"})
+            setValues({...values, ['error']: "Email must be of the form a@a.aa"})
         } else {
             register(values.firstName, values.lastName, values.email, values.password)
                 .then(() => {
@@ -161,13 +161,13 @@ const RegisterPage = (props: ISnackProps) => {
                 <Grid item xs={6}>
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
-                            <TextField label="First Name" variant="outlined" onChange={handleChange('firstName')} />
+                            <TextField label="First Name *" variant="outlined" onChange={handleChange('firstName')} />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Last Name" variant="outlined" onChange={handleChange('lastName')} />
+                            <TextField label="Last Name *" variant="outlined" onChange={handleChange('lastName')} />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Email" variant="outlined" onChange={handleChange('email')} />
+                            <TextField label="Email *" variant="outlined" onChange={handleChange('email')} />
                         </Grid>
                         <Grid item xs={12}>
                             <FormControl sx={{width: '25ch' }} variant="outlined">

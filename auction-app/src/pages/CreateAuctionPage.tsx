@@ -109,6 +109,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                     })
                 }, (error) => {
                     navigate("/")
+                    props.handleSnackError("Auction doesn't exist")
                 })
         }
     }, [user, id])

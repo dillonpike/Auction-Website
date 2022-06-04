@@ -9,6 +9,7 @@ import CreateAuctionPage from "./pages/CreateAuctionPage";
 import {Alert, AlertColor, Snackbar} from "@mui/material";
 import NavigationBar from "./components/NavigationBar";
 import ProfilePage from "./pages/ProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
 
 function App() {
 
@@ -65,6 +66,7 @@ function App() {
               <Route path="/create-auction" element={<CreateAuctionPage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
               <Route path="/edit-auction/:id" element={<CreateAuctionPage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
               <Route path="/profile" element={<ProfilePage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
+              <Route path="/edit-profile" element={<EditProfilePage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
             </Routes>
           </div>
         </Router>

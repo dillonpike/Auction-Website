@@ -91,5 +91,21 @@ const deleteUserImage = async (id: number | string) => {
         { headers: { 'X-Authorization': `${Cookies.get('token')}`}})
 }
 
+const editUser = async(id: number, firstName: string, lastName: string, email: string) => {
+    return await axios.patch(`http://localhost:4941/api/v1/users/${id}`, {id: id, firstName: firstName,
+            lastName: lastName, email: email}, { headers: { 'X-Authorization': `${Cookies.get('token')}`}})
+}
+
+const editUserWithPassword = async(id: number, firstName: string, lastName: string, email: string, password: string, currentPassword: string) => {
+    return await axios.patch(`http://localhost:4941/api/v1/users/${id}`, {id: id, firstName: firstName,
+        lastName: lastName, email: email, password: password, currentPassword: currentPassword},
+        { headers: { 'X-Authorization': `${Cookies.get('token')}`}})
+}
+
+const getUserImage = async (id: number) => {
+    return await axios.get(`http://localhost:4941/api/v1/users/${id}/image`,
+        { headers: { 'X-Authorization': `${Cookies.get('token')}` }})
+}
+
 export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage,
-    deleteAuction, placeBid, editUserImage, deleteUserImage};
+    deleteAuction, placeBid, editUserImage, deleteUserImage, editUser, editUserWithPassword, getUserImage};
