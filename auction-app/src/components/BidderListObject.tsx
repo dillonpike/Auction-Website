@@ -29,7 +29,7 @@ const BidderListObject = (props: IBidProps) => {
                     component="img"
                     sx={{ width: 68, height: 68 }}
                     image={`http://localhost:4941/api/v1/users/${props.bid.bidderId}/image`}
-                    onError={(event: any) => {event.target.src = `https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg`}}
+                    onError={(event: any) => {event.target.src = require("../avatar.png")}}
                 />
                 <CardContent>
                     <Stack direction="row" spacing={3}>

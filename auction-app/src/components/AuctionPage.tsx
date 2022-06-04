@@ -311,7 +311,7 @@ const AuctionPage = (props: ISnackProps) => {
                                         <Typography variant="subtitle1" component="div">Closes on: {getEndDateString()}</Typography>
                                         <Typography variant="subtitle1">Category: {category}</Typography>
                                         <Typography variant="subtitle1">Description: {auction.description}</Typography>
-                                        <Typography variant="subtitle1">Reserve: {auction.reserve}</Typography>
+                                        <Typography variant="subtitle1">Reserve: ${auction.reserve}</Typography>
                                         <Typography variant="subtitle1">Number of bids: {auction.numBids}</Typography>
                                         <UserListObject key={auction.sellerId} userId={auction.sellerId}/>
                                     </CardContent>

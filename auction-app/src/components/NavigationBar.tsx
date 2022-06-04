@@ -19,7 +19,7 @@ import {Alert, AlertColor, Grid, Snackbar} from "@mui/material";
 import {useUserStore} from "../store";
 
 const pages = [['Auctions', '/'], ['Create Auction', '/create-auction']];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = ['Profile', 'Logout'];
 
 const NavigationBar = () => {
     const navigate = useNavigate();
@@ -52,7 +52,9 @@ const NavigationBar = () => {
 
     const handleCloseUserMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElUser(null);
-        if (event.currentTarget.innerText === "Logout") {
+        if (event.currentTarget.innerText === "Profile") {
+            navigate("/profile")
+        } else if (event.currentTarget.innerText === "Logout") {
             handleLogout()
         }
     };
