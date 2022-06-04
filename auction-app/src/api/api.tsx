@@ -81,4 +81,15 @@ const placeBid = async (id: number, amount: number) => {
         { headers: { 'X-Authorization': `${Cookies.get('token')}` }})
 }
 
-export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage, deleteAuction, placeBid};
+const editUserImage = async (id: number | string, image: any) => {
+    return await axios.put(`http://localhost:4941/api/v1/users/${id}/image`, image,
+        { headers: { 'X-Authorization': `${Cookies.get('token')}`, 'Content-Type': image.type }})
+}
+
+const deleteUserImage = async (id: number | string) => {
+    return await axios.delete(`http://localhost:4941/api/v1/users/${id}/image`,
+        { headers: { 'X-Authorization': `${Cookies.get('token')}`}})
+}
+
+export {register, login, getUser, isLoggedIn, logout, getAuction, getAuctionImage, editAuction, editAuctionImage,
+    deleteAuction, placeBid, editUserImage, deleteUserImage};

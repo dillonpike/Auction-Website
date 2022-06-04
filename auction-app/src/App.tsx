@@ -61,7 +61,7 @@ function App() {
               <Route path="*" element={<Home/>}/>
               <Route path="/auction/:id" element={<AuctionPage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
               <Route path="/login" element={<LoginPage/>}/>
-              <Route path="/register" element={<RegisterPage/>}/>
+              <Route path="/register" element={<RegisterPage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
               <Route path="/create-auction" element={<CreateAuctionPage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
               <Route path="/edit-auction/:id" element={<CreateAuctionPage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>
               <Route path="/profile" element={<ProfilePage handleSnackSuccess={handleSnackSuccess} handleSnackError={handleSnackError}/>}/>

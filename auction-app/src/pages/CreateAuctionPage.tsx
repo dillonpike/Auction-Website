@@ -231,9 +231,14 @@ const CreateAuctionPage = (props: ISnackProps) => {
     }
 
     const handleImage = (event: any) => {
-        setImageUrl(URL.createObjectURL(event.target.files[0]));
-        setValues({ ...values, image: event.target.files[0] });
-        setImageError("")
+        const image = event.target.files[0];
+        if (["image/png", "image/jpeg", "image/gif"].includes(image.type)) {
+            setImageUrl(URL.createObjectURL(image));
+            setValues({...values, image: image});
+            setImageError("")
+        } else {
+            setImageError("Please upload a .png, .jpg, .jpeg, or .gif file")
+        }
     }
 
     const confirm_button = () => {
