@@ -4,7 +4,7 @@ import {
     Box,
     Card,
     CardMedia,
-    FilledInput,
+    FilledInput, FormHelperText,
     Grid,
     InputAdornment,
     InputLabel,
@@ -62,6 +62,12 @@ const EditProfilePage = (props: ISnackProps) => {
         image: null,
         error: ''
     });
+    const [firstNameError, setFirstNameError] = React.useState("")
+    const [lastNameError, setLastNameError] = React.useState("")
+    const [emailError, setEmailError] = React.useState("")
+    const [currentPasswordError, setCurrentPasswordError] = React.useState("")
+    const [passwordError, setPasswordError] = React.useState("")
+    const [emailInUse, setEmailInUse] = React.useState(false)
     const navigate = useNavigate();
     const user = useUserStore(state => state.user)
     const setUser = useUserStore(state => state.setUser)
@@ -130,43 +136,125 @@ const EditProfilePage = (props: ISnackProps) => {
         } catch {}
     }
 
+    const checkInput = (): boolean => {
+        let hasError = false;
+        if (values.firstName.length < 1) {
+            setFirstNameError("Must be at least 1 character")
+            hasError = true
+        } else {
+            setFirstNameError("")
+        }
+        if (values.lastName.length < 1) {
+            setLastNameError("Must be at least 1 character")
+            hasError = true
+        } else {
+            setLastNameError("")
+        }
+        if (!isValidEmail(values.email)) {
+            setEmailError("Must be of the form a@a.aa")
+            setEmailInUse(false)
+            hasError = true
+        } else {
+            setEmailError("")
+        }
+        return !hasError
+    }
+
+    const checkPasswordInput = (): boolean => {
+        if (values.password.length < 6) {
+            setPasswordError("Must be at least 6 characters long")
+            return false
+        } else {
+            setPasswordError("")
+            return true
+        }
+    }
+
+    const checkEmailInUse = (error: any): boolean => {
+        if (error.response.statusText.includes("Bad Request: email already in use")) {
+            setEmailError("Email already in use")
+            setEmailInUse(true)
+            return false
+        } else {
+            setEmailError("")
+            setEmailInUse(false)
+            return true
+        }
+    }
+
+    const checkInvalidCurrentPassword = (error: any): boolean => {
+        if (error.response.statusText.includes("Invalid password(s)")) {
+            setCurrentPasswordError("Current password is incorrect")
+            return false
+        } else {
+            setCurrentPasswordError("")
+            return true
+        }
+    }
+
+    const checkProfileImage = (): boolean => {
+        try {
+            return values.image.type !== undefined
+        } catch {
+            return false
+        }
+    }
+
     const handleEdit = () => {
         if (values.currentPassword === "" && values.password === "") {
-            editUser(user.userId, values.firstName, values.lastName, values.email).then((response) => {
-                setUser({userId: user.userId, firstName: values.firstName, lastName: values.lastName, email: values.email})
-                if (values.image.type !== undefined) {
-                    editUserImage(user.userId, values.image).then((imageResponse) => {
+            if (checkInput()) {
+                editUser(user.userId, values.firstName, values.lastName, values.email).then((response) => {
+                    setUser({
+                        userId: user.userId,
+                        firstName: values.firstName,
+                        lastName: values.lastName,
+                        email: values.email
+                    })
+                    if (checkProfileImage()) {
+                        editUserImage(user.userId, values.image).then((imageResponse) => {
+                            navigate(`/profile`)
+                            props.handleSnackSuccess(`Saved details`)
+                        }, (error) => {
+                            navigate(`/profile`)
+                            props.handleSnackError("Failed to upload image")
+                        })
+                    } else {
                         navigate(`/profile`)
                         props.handleSnackSuccess(`Saved details`)
-                    }, (error) => {
-                        navigate(`/profile`)
-                        props.handleSnackError("Failed to upload image")
-                    })
-                } else {
-                    navigate(`/profile`)
-                    props.handleSnackSuccess(`Saved details`)
-                }
-            }, (error) => {
-                props.handleSnackError("Failed to save details")
-            })
+                    }
+                }, (error) => {
+                    if (!checkEmailInUse(error)) {
+                        props.handleSnackError("Failed to save details")
+                    }
+                })
+            }
         } else {
-            editUserWithPassword(user.userId, values.firstName, values.lastName, values.email, values.currentPassword, values.password).then((response) => {
-                setUser({userId: user.userId, firstName: values.firstName, lastName: values.lastName, email: values.email})
-                if (values.image.type !== undefined) {
-                    editUserImage(user.userId, values.image).then((imageResponse) => {
+            if (checkPasswordInput()) {
+                editUserWithPassword(user.userId, values.firstName, values.lastName, values.email, values.password, values.currentPassword).then((response) => {
+                    setUser({
+                        userId: user.userId,
+                        firstName: values.firstName,
+                        lastName: values.lastName,
+                        email: values.email
+                    })
+                    if (values.image.type !== undefined) {
+                        editUserImage(user.userId, values.image).then((imageResponse) => {
+                            navigate(`/profile`)
+                            props.handleSnackSuccess(`Saved details`)
+                        }, (error) => {
+                            navigate(`/profile`)
+                            props.handleSnackError("Failed to upload image")
+                        })
+                    } else {
                         navigate(`/profile`)
                         props.handleSnackSuccess(`Saved details`)
-                    }, (error) => {
-                        navigate(`/profile`)
-                        props.handleSnackError("Failed to upload image")
-                    })
-                } else {
-                    navigate(`/profile`)
-                    props.handleSnackSuccess(`Saved details`)
-                }
-            }, (error) => {
-                props.handleSnackError("Failed to save details")
-            })
+                    }
+                }, (error) => {
+                    if (!checkEmailInUse(error) && !checkInvalidCurrentPassword(error)) {
+                        props.handleSnackError("Failed to save details")
+                    }
+                })
+            }
         }
     }
 
@@ -226,22 +314,29 @@ const EditProfilePage = (props: ISnackProps) => {
                 <Grid item xs={6}>
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
-                            <TextField label="First Name *" variant="outlined" value={values.firstName} onChange={handleChange('firstName')} />
+                            <TextField label="First Name *" variant="outlined" value={values.firstName} onChange={handleChange('firstName')}
+                                       error={firstNameError !== "" && values.firstName === ""}
+                                       helperText={firstNameError !== "" && values.firstName === "" ? firstNameError : ""} />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Last Name *" variant="outlined" value={values.lastName} onChange={handleChange('lastName')} />
+                            <TextField label="Last Name *" variant="outlined" value={values.lastName} onChange={handleChange('lastName')}
+                                       error={lastNameError !== "" && values.lastName === ""}
+                                       helperText={lastNameError !== "" && values.lastName === "" ? lastNameError : ""}/>
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Email *" variant="outlined" value={values.email} onChange={handleChange('email')} />
+                            <TextField label="Email *" variant="outlined" value={values.email} onChange={handleChange('email')}
+                                       error={emailError !== "" && (!isValidEmail(values.email) || emailInUse)}
+                                       helperText={emailError !== "" && (!isValidEmail(values.email) || emailInUse) ? emailError : ""}/>
                         </Grid>
                         <Grid item xs={12}>
                             <FormControl sx={{width: '25ch' }} variant="outlined">
-                                <InputLabel htmlFor="outlined-adornment-password">Current Password</InputLabel>
+                                <InputLabel htmlFor="outlined-adornment-currentPassword">Current Password</InputLabel>
                                 <OutlinedInput
-                                    id="outlined-adornment-password"
+                                    id="outlined-adornment-currentPassword"
                                     type={values.showCurrentPassword ? 'text' : 'password'}
                                     value={values.currentPassword}
                                     onChange={handleChange('currentPassword')}
+                                    error={currentPasswordError !== ""}
                                     endAdornment={
                                         <InputAdornment position="end">
                                             <IconButton
@@ -256,6 +351,9 @@ const EditProfilePage = (props: ISnackProps) => {
                                     }
                                     label="Current Password"
                                 />
+                                <FormHelperText error>
+                                    {currentPasswordError !== "" ? currentPasswordError : ""}
+                                </FormHelperText>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12}>
@@ -266,6 +364,7 @@ const EditProfilePage = (props: ISnackProps) => {
                                     type={values.showPassword ? 'text' : 'password'}
                                     value={values.password}
                                     onChange={handleChange('password')}
+                                    error={passwordError !== "" && values.password.length < 6}
                                     endAdornment={
                                         <InputAdornment position="end">
                                             <IconButton
@@ -280,6 +379,9 @@ const EditProfilePage = (props: ISnackProps) => {
                                     }
                                     label="New Password"
                                 />
+                                <FormHelperText error>
+                                    {passwordError !== "" && values.password.length < 6 ? passwordError : ""}
+                                </FormHelperText>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12}>

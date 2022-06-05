@@ -87,11 +87,9 @@ const AuctionPage = (props: ISnackProps) => {
         axios.get(`http://localhost:4941/api/v1/auctions/${id}`)
             .then((response) => {
                 setAuction(response.data)
-                // setErrorFlag(false)
-                // setErrorMessage("")
             }, (error) => {
-                // setErrorFlag(true)
-                // setErrorMessage(error.toString())
+                navigate("/")
+                props.handleSnackError("Auction does not exist")
             })
     }
 
