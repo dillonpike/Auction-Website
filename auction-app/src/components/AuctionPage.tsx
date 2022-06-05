@@ -140,6 +140,10 @@ const AuctionPage = (props: ISnackProps) => {
         }
     }, [auction])
 
+    const isClosed = () => {
+        return new Date().getTime() - new Date(auction.endDate).getTime() >= 0
+    }
+
     const getEndDateString = () => {
         const endDate = new Date(auction.endDate)
         return `${endDate.toLocaleDateString('en-UK',
@@ -191,6 +195,8 @@ const AuctionPage = (props: ISnackProps) => {
             props.handleSnackError("You must be logged in to place a bid")
             setBidModalOpen(false)
         } else {
+            setBidAmount(auction.highestBid + 1)
+            checkBidAmount()
             setBidModalOpen(true)
         }
     }
@@ -220,6 +226,7 @@ const AuctionPage = (props: ISnackProps) => {
 
     const handleBidAmount = (event: any) => {
         setBidAmount(event.target.value)
+        checkBidAmount()
     }
 
     const bid_modal = () => {
@@ -232,8 +239,8 @@ const AuctionPage = (props: ISnackProps) => {
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
                             <TextField label="Amount" variant="outlined" value={bidAmount} onChange={handleBidAmount}
-                                       error={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount))))}
-                                       helperText={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount)))) ? bidAmountError : ""}/>
+                                       error={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount))) || bidAmount >= Math.pow(2, 31))}
+                                       helperText={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount))) || bidAmount >= Math.pow(2, 31)) ? bidAmountError : ""}/>
                         </Grid>
                         <Grid item xs={12} style={{justifyContent: 'center'}}>
                             <Button variant="contained" onClick={handleBid}>Place Bid</Button>
@@ -254,8 +261,12 @@ const AuctionPage = (props: ISnackProps) => {
     }
 
     const checkBidAmount = () => {
-        if (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount)))) {
+        if (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" ||
+            !Number.isSafeInteger(parseFloat(String(bidAmount))) || bidAmount >= Math.pow(2, 31)) {
             setBidAmountError(`Must be a positive whole number greater than the highest bid ($${auction.highestBid})`)
+            if (bidAmount >= Math.pow(2, 31)) {
+                setBidAmountError(`Maximum bid amount is $${Math.pow(2, 31)-1}`)
+            }
             return false
         }
         setBidAmountError("")
@@ -267,8 +278,10 @@ const AuctionPage = (props: ISnackProps) => {
             placeBid(auction.auctionId, parseInt(String(bidAmount), 10)).then((response) => {
                 getBids()
                 handleBidModalClose()
+                auction.highestBid = parseInt(String(bidAmount), 10)
                 props.handleSnackSuccess(`Placed bid`)
             }, (error) => {
+                console.log(error)
                 props.handleSnackError("Failed to place bid")
             })
         }
@@ -306,7 +319,9 @@ const AuctionPage = (props: ISnackProps) => {
                                 <Card sx={auctionCardStyles}>
                                     <CardContent>
                                         <Typography variant="h5" component="div">{auction.title}</Typography>
-                                        <Typography variant="subtitle1" component="div">Closes on: {getEndDateString()}</Typography>
+                                        <Typography variant="subtitle1" component="div">
+                                            {isClosed() ? "Closed on" : "Closes on"}: {getEndDateString()}
+                                        </Typography>
                                         <Typography variant="subtitle1">Category: {category}</Typography>
                                         <Typography variant="subtitle1">Description: {auction.description}</Typography>
                                         <Typography variant="subtitle1">Reserve: ${auction.reserve}</Typography>

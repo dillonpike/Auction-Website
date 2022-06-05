@@ -171,7 +171,7 @@ const RegisterPage = (props: ISnackProps) => {
                         </Grid>
                         <Grid item xs={12}>
                             <FormControl sx={{width: '25ch' }} variant="outlined">
-                                <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
+                                <InputLabel htmlFor="outlined-adornment-password">Password *</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-password"
                                     type={values.showPassword ? 'text' : 'password'}
@@ -189,7 +189,7 @@ const RegisterPage = (props: ISnackProps) => {
                                             </IconButton>
                                         </InputAdornment>
                                     }
-                                    label="Password"
+                                    label="Password *"
                                 />
                             </FormControl>
                         </Grid>
