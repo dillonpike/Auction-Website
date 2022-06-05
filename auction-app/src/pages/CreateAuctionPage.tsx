@@ -3,7 +3,7 @@ import NavigationBar from "../components/NavigationBar";
 import {
     Alert, AlertColor,
     Box, Card, CardMedia,
-    FilledInput,
+    FilledInput, FormHelperText,
     Grid,
     InputAdornment,
     InputLabel,
@@ -171,6 +171,12 @@ const CreateAuctionPage = (props: ISnackProps) => {
         } else {
             setDescriptionError("")
         }
+        if ((endDate !== null) && (new Date()).getTime() - endDate.getTime() >= 0) {
+            setEndDateError("End date cannot be in the past")
+            hasError = true
+        } else {
+            setEndDateError("")
+        }
         if (values.image === null) {
             setImageError("Please upload an image.")
             hasError = true
@@ -315,9 +321,12 @@ const CreateAuctionPage = (props: ISnackProps) => {
                                     value={endDate}
                                     onChange={(newValue) => {
                                         handleEndDate(newValue);
-
                                     }}
-                                    renderInput={(params) => <TextField {...params} />}
+                                    renderInput={(params) => <TextField
+                                        {...params}
+                                        error={endDateError !== "" && (endDate !== null) && (new Date()).getTime() - endDate.getTime() >= 0}
+                                        helperText={endDateError !== "" && (endDate !== null) && (new Date()).getTime() - endDate.getTime() >= 0 ? endDateError : ""}
+                                    />}
                                 />
                             </LocalizationProvider>
                         </Grid>
