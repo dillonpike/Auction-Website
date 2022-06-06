@@ -200,6 +200,13 @@ const EditProfilePage = (props: ISnackProps) => {
         }
     }
 
+    const handleKeyPress = (event: any) => {
+        // Enter key
+        if (event.key === "Enter") {
+            handleEdit()
+        }
+    }
+
     const handleEdit = () => {
         if (values.currentPassword === "" && values.password === "") {
             if (checkInput()) {
@@ -223,7 +230,7 @@ const EditProfilePage = (props: ISnackProps) => {
                         props.handleSnackSuccess(`Saved details`)
                     }
                 }, (error) => {
-                    if (!checkEmailInUse(error)) {
+                    if (checkEmailInUse(error)) {
                         props.handleSnackError("Failed to save details")
                     }
                 })
@@ -237,7 +244,7 @@ const EditProfilePage = (props: ISnackProps) => {
                         lastName: values.lastName,
                         email: values.email
                     })
-                    if (values.image.type !== undefined) {
+                    if (values.image !== null && values.image.type !== undefined) {
                         editUserImage(user.userId, values.image).then((imageResponse) => {
                             navigate(`/profile`)
                             props.handleSnackSuccess(`Saved details`)
@@ -250,7 +257,7 @@ const EditProfilePage = (props: ISnackProps) => {
                         props.handleSnackSuccess(`Saved details`)
                     }
                 }, (error) => {
-                    if (!checkEmailInUse(error) && !checkInvalidCurrentPassword(error)) {
+                    if (checkEmailInUse(error) && checkInvalidCurrentPassword(error)) {
                         props.handleSnackError("Failed to save details")
                     }
                 })
@@ -315,21 +322,27 @@ const EditProfilePage = (props: ISnackProps) => {
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
                             <TextField label="First Name *" variant="outlined" value={values.firstName} onChange={handleChange('firstName')}
+                                       style={{width: "250px"}}
+                                       onKeyPress={handleKeyPress}
                                        error={firstNameError !== "" && values.firstName === ""}
                                        helperText={firstNameError !== "" && values.firstName === "" ? firstNameError : ""} />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField label="Last Name *" variant="outlined" value={values.lastName} onChange={handleChange('lastName')}
+                                       style={{width: "250px"}}
+                                       onKeyPress={handleKeyPress}
                                        error={lastNameError !== "" && values.lastName === ""}
                                        helperText={lastNameError !== "" && values.lastName === "" ? lastNameError : ""}/>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField label="Email *" variant="outlined" value={values.email} onChange={handleChange('email')}
+                                       style={{width: "250px"}}
+                                       onKeyPress={handleKeyPress}
                                        error={emailError !== "" && (!isValidEmail(values.email) || emailInUse)}
                                        helperText={emailError !== "" && (!isValidEmail(values.email) || emailInUse) ? emailError : ""}/>
                         </Grid>
                         <Grid item xs={12}>
-                            <FormControl sx={{width: '25ch' }} variant="outlined">
+                            <FormControl style={{width: "250px"}} variant="outlined">
                                 <InputLabel htmlFor="outlined-adornment-currentPassword">Current Password</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-currentPassword"
@@ -337,6 +350,7 @@ const EditProfilePage = (props: ISnackProps) => {
                                     value={values.currentPassword}
                                     onChange={handleChange('currentPassword')}
                                     error={currentPasswordError !== ""}
+                                    onKeyPress={handleKeyPress}
                                     endAdornment={
                                         <InputAdornment position="end">
                                             <IconButton
@@ -357,7 +371,7 @@ const EditProfilePage = (props: ISnackProps) => {
                             </FormControl>
                         </Grid>
                         <Grid item xs={12}>
-                            <FormControl sx={{width: '25ch' }} variant="outlined">
+                            <FormControl style={{width: "250px"}} variant="outlined">
                                 <InputLabel htmlFor="outlined-adornment-password">New Password</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-password"
@@ -365,6 +379,7 @@ const EditProfilePage = (props: ISnackProps) => {
                                     value={values.password}
                                     onChange={handleChange('password')}
                                     error={passwordError !== "" && values.password.length < 6}
+                                    onKeyPress={handleKeyPress}
                                     endAdornment={
                                         <InputAdornment position="end">
                                             <IconButton

@@ -292,6 +292,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
                             <TextField label="Title"
+                                       style={{width: "250px"}}
                                        variant="outlined"
                                        value={values.title}
                                        onChange={handleChange('title')}
@@ -301,7 +302,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <FormControl sx={{minWidth: '25ch' }}>
+                            <FormControl style={{width: "250px"}}>
                                 <InputLabel id="demo-simple-select-label">Category *</InputLabel>
                                 <Select
                                     labelId="demo-simple-select-label"
@@ -324,6 +325,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                                     }}
                                     renderInput={(params) => <TextField
                                         {...params}
+                                        style={{width: "250px"}}
                                         error={endDateError !== "" && (endDate !== null) && (new Date()).getTime() - endDate.getTime() >= 0}
                                         helperText={endDateError !== "" && (endDate !== null) && (new Date()).getTime() - endDate.getTime() >= 0 ? endDateError : ""}
                                     />}
@@ -332,6 +334,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                         </Grid>
                         <Grid item xs={12}>
                             <TextField label="Description" variant="outlined" onChange={handleChange('description')}
+                                       style={{width: "250px"}}
                                        error={descriptionError !== "" && values.description === ""}
                                        helperText={descriptionError !== "" && values.description === "" ? descriptionError : ""}
                                        required value={values.description}
@@ -339,6 +342,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                         </Grid>
                         <Grid item xs={12}>
                             <TextField label="Reserve" variant="outlined" value={values.reserve} onChange={handleChange('reserve')}
+                                       style={{width: "250px"}}
                                        error={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1))}
                                        helperText={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1)) ? reserveError : ""}
                             />

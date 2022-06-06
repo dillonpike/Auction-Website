@@ -2,7 +2,7 @@ import SearchBar from "./SearchBar";
 import React from "react";
 import axios from "axios";
 import SelectCategories from "./SelectCategories";
-import {Box, Button, Toolbar} from "@mui/material";
+import {Box, Button, Grid, Toolbar} from "@mui/material";
 import AuctionListObject from "./AuctionListObject";
 import CSS from "csstype";
 import SelectStatus from "./SelectStatus";
@@ -62,27 +62,27 @@ const Home = () => {
     const auction_list = () => auctions.map((auction: Auction) =>
         <AuctionListObject key={auction.auctionId} auction={auction} categories={allCategories}/>)
 
-    const card: CSS.Properties = {
-        padding: "10px",
-        margin: "20px",
-    }
-
     const box: CSS.Properties = {
-        padding: "10px",
-        margin: "20px",
+        padding: "30px",
     }
 
     return (
         <div>
             <NavigationBar/>
-            <Toolbar style={card}>
-                <SearchBar setSearchTitle={setSearchTitle}/>
-            </Toolbar>
-            <Box style={box}>
-                <SelectCategories categories={allCategories} setCategories={setCategories}/>
-                <SelectStatus setStatus={setStatus}/>
-                <SelectSort setSort={setSort}/>
-            </Box>
+            <Grid container spacing={2} style={box}>
+                <Grid item xs={12}>
+                    <SearchBar setSearchTitle={setSearchTitle}/>
+                </Grid>
+                <Grid item xs={4}>
+                    <SelectCategories categories={allCategories} setCategories={setCategories}/>
+                </Grid>
+                <Grid item xs={4}>
+                    <SelectStatus setStatus={setStatus}/>
+                </Grid>
+                <Grid item xs={4}>
+                    <SelectSort setSort={setSort}/>
+                </Grid>
+            </Grid>
             {auction_list()}
             <AuctionPagination page={page} setPage={setPage} pageCount={pageCount} getAuctions={getAuctions} setCountPerPage={setCountPerPage}/>
         </div>

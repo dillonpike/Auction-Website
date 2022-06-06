@@ -4,7 +4,7 @@ import {
     Box,
     Card,
     CardMedia,
-    FilledInput,
+    FilledInput, FormHelperText,
     Grid,
     InputAdornment,
     InputLabel,
@@ -49,6 +49,11 @@ const RegisterPage = (props: ISnackProps) => {
         image: null,
         error: ''
     });
+    const [firstNameError, setFirstNameError] = React.useState("")
+    const [lastNameError, setLastNameError] = React.useState("")
+    const [emailError, setEmailError] = React.useState("")
+    const [passwordError, setPasswordError] = React.useState("")
+    const [emailInUse, setEmailInUse] = React.useState(false)
     const navigate = useNavigate();
     const user = useUserStore(state => state.user)
     const setUser = useUserStore(state => state.setUser)
@@ -83,12 +88,50 @@ const RegisterPage = (props: ISnackProps) => {
         return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)
     }
 
-    const handleRegister = () => {
-        if (values.password.length < 6) {
-            setValues({...values, ['error']: "Password must be at least 6 characters long"})
-        } else if (!isValidEmail(values.email)) {
-            setValues({...values, ['error']: "Email must be of the form a@a.aa"})
+    const checkInput = (): boolean => {
+        let hasError = false;
+        if (values.firstName.length < 1) {
+            setFirstNameError("Must be at least 1 character")
+            hasError = true
         } else {
+            setFirstNameError("")
+        }
+        if (values.lastName.length < 1) {
+            setLastNameError("Must be at least 1 character")
+            hasError = true
+        } else {
+            setLastNameError("")
+        }
+        if (!isValidEmail(values.email)) {
+            setEmailError("Must be of the form a@a.aa")
+            setEmailInUse(false)
+            hasError = true
+        } else {
+            setEmailError("")
+        }
+        if (values.password.length < 6) {
+            setPasswordError("Must be at least 6 characters long")
+            hasError = true
+        } else {
+            setPasswordError("")
+        }
+        return !hasError
+    }
+
+    const checkEmailInUse = (error: any): boolean => {
+        if (error.response.statusText.includes("Bad Request: email already in use")) {
+            setEmailError("Email already in use")
+            setEmailInUse(true)
+            return false
+        } else {
+            setEmailError("")
+            setEmailInUse(false)
+            return true
+        }
+    }
+
+    const handleRegister = () => {
+        if (checkInput()) {
             register(values.firstName, values.lastName, values.email, values.password)
                 .then(() => {
                     login(values.email, values.password).then((response) => {
@@ -111,7 +154,10 @@ const RegisterPage = (props: ISnackProps) => {
                         }
                     )
                 }, (error: any) => {
-                    setValues({...values, ['error']: error.response.statusText})
+                    if (checkEmailInUse(error)) {
+                        props.handleSnackError("Failed to save details")
+                    }
+                    // setValues({...values, ['error']: error.response.statusText})
                 })
         }
     }
@@ -124,6 +170,13 @@ const RegisterPage = (props: ISnackProps) => {
             setImageError("")
         } else {
             setImageError("Please upload a .png, .jpg, .jpeg, or .gif file")
+        }
+    }
+
+    const handleKeyPress = (event: any) => {
+        // Enter key
+        if (event.key === "Enter") {
+            handleRegister()
         }
     }
 
@@ -161,22 +214,36 @@ const RegisterPage = (props: ISnackProps) => {
                 <Grid item xs={6}>
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
-                            <TextField label="First Name *" variant="outlined" onChange={handleChange('firstName')} />
+                            <TextField label="First Name *" variant="outlined" onChange={handleChange('firstName')}
+                                       style={{width: "250px"}}
+                                       onKeyPress={handleKeyPress}
+                                       error={firstNameError !== "" && values.firstName === ""}
+                                       helperText={firstNameError !== "" && values.firstName === "" ? firstNameError : ""} />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Last Name *" variant="outlined" onChange={handleChange('lastName')} />
+                            <TextField label="Last Name *" variant="outlined" onChange={handleChange('lastName')}
+                                       style={{width: "250px"}}
+                                       onKeyPress={handleKeyPress}
+                                       error={lastNameError !== "" && values.lastName === ""}
+                                       helperText={lastNameError !== "" && values.lastName === "" ? lastNameError : ""}/>
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField label="Email *" variant="outlined" onChange={handleChange('email')} />
+                            <TextField label="Email *" variant="outlined" onChange={handleChange('email')}
+                                       style={{width: "250px"}}
+                                       onKeyPress={handleKeyPress}
+                                       error={emailError !== "" && (!isValidEmail(values.email) || emailInUse)}
+                                       helperText={emailError !== "" && (!isValidEmail(values.email) || emailInUse) ? emailError : ""}/>
                         </Grid>
                         <Grid item xs={12}>
-                            <FormControl sx={{width: '25ch' }} variant="outlined">
+                            <FormControl style={{width: "250px"}} variant="outlined">
                                 <InputLabel htmlFor="outlined-adornment-password">Password *</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-password"
                                     type={values.showPassword ? 'text' : 'password'}
                                     value={values.password}
                                     onChange={handleChange('password')}
+                                    error={passwordError !== "" && values.password.length < 6}
+                                    onKeyPress={handleKeyPress}
                                     endAdornment={
                                         <InputAdornment position="end">
                                             <IconButton
@@ -191,6 +258,9 @@ const RegisterPage = (props: ISnackProps) => {
                                     }
                                     label="Password *"
                                 />
+                                <FormHelperText error>
+                                    {passwordError !== "" && values.password.length < 6 ? passwordError : ""}
+                                </FormHelperText>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12}>

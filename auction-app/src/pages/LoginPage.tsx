@@ -72,22 +72,30 @@ const LoginPage = () => {
         })
     }
 
+    const handleKeyPress = (event: any) => {
+        // Enter key
+        if (event.key === "Enter") {
+            handleLogin()
+        }
+    }
+
     return (
         <Box>
             <NavigationBar/>
             <br/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
-                    <TextField label="Email" variant="outlined" onChange={handleChange('email')} />
+                    <TextField label="Email" variant="outlined" onKeyPress={handleKeyPress} style={{width: "250px"}} onChange={handleChange('email')} />
                 </Grid>
                 <Grid item xs={12}>
-                    <FormControl sx={{width: '25ch' }} variant="outlined">
+                    <FormControl style={{width: "250px"}} variant="outlined">
                         <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
                         <OutlinedInput
                             id="outlined-adornment-password"
                             type={values.showPassword ? 'text' : 'password'}
                             value={values.password}
                             onChange={handleChange('password')}
+                            onKeyPress={handleKeyPress}
                             endAdornment={
                                 <InputAdornment position="end">
                                     <IconButton

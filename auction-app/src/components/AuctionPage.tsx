@@ -229,6 +229,13 @@ const AuctionPage = (props: ISnackProps) => {
         checkBidAmount()
     }
 
+    const handleKeyPress = (event: any) => {
+        // Enter key
+        if (event.key === "Enter") {
+            handleBid()
+        }
+    }
+
     const bid_modal = () => {
         return (
             <Modal
@@ -239,6 +246,7 @@ const AuctionPage = (props: ISnackProps) => {
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
                             <TextField label="Amount" variant="outlined" value={bidAmount} onChange={handleBidAmount}
+                                       onKeyPress={handleKeyPress}
                                        error={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount))) || bidAmount >= Math.pow(2, 31))}
                                        helperText={bidAmountError !== "" && (isNaN(bidAmount) || bidAmount <= auction.highestBid || bidAmount.toString() === "" || !Number.isSafeInteger(parseFloat(String(bidAmount))) || bidAmount >= Math.pow(2, 31)) ? bidAmountError : ""}/>
                         </Grid>
