@@ -148,7 +148,6 @@ const CreateAuctionPage = (props: ISnackProps) => {
         if (date !== null) {
             try {
                 date.setTime(date.getTime() + 12 * 60 * 60 * 1000)
-                console.log(date)
                 setValues({...values, endDate: date.toISOString().replace('Z', '').replace('T', ' ')})
             } catch {}
         }
@@ -157,7 +156,25 @@ const CreateAuctionPage = (props: ISnackProps) => {
     const handleChange =
         (value: keyof State) => (event: React.ChangeEvent<HTMLInputElement>) => {
             setValues({ ...values, [value]: event.target.value });
+            if (value === 'reserve') {
+                checkReserve(event.target.value)
+            }
         };
+
+    const checkReserve = (reserve: any) => {
+        if (reserve === null) {
+            reserve = values.reserve
+        }
+        if (isNaN(reserve) || (values.reserve.toString() !== "" && (reserve < 1 || !Number.isSafeInteger(parseFloat(String(reserve))) || reserve >= Math.pow(2, 31)))) {
+            setReserveError("Must be a whole number $1 or more.")
+            if (reserve >= Math.pow(2, 31)) {
+                setReserveError(`Maximum reserve is $${Math.pow(2, 31)-1}`)
+            }
+            return false
+        }
+        setReserveError("")
+        return true
+    }
 
     const checkInput = (): boolean => {
         let hasError = false;
@@ -185,11 +202,8 @@ const CreateAuctionPage = (props: ISnackProps) => {
         } else {
             setImageError("")
         }
-        if (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1)) {
-            setReserveError("Must be a whole number $1 or more.")
+        if (!checkReserve(null)) {
             hasError = true
-        } else {
-            setReserveError("")
         }
         return !hasError
     }
@@ -357,8 +371,8 @@ const CreateAuctionPage = (props: ISnackProps) => {
                         <Grid item xs={12}>
                             <TextField label="Reserve" variant="outlined" value={values.reserve} onChange={handleChange('reserve')}
                                        style={{width: "250px"}}
-                                       error={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1))}
-                                       helperText={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && values.reserve < 1)) ? reserveError : ""}
+                                       error={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && (values.reserve < 1 || !Number.isSafeInteger(parseFloat(String(values.reserve))) || values.reserve >= Math.pow(2, 31))))}
+                                       helperText={reserveError !== "" && (isNaN(values.reserve) || (values.reserve.toString() !== "" && (values.reserve < 1 || !Number.isSafeInteger(parseFloat(String(values.reserve))) || values.reserve >= Math.pow(2, 31)))) ? reserveError : ""}
                             />
                         </Grid>
                         <Grid item xs={12}>
