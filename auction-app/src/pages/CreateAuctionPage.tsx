@@ -137,7 +137,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
     }, [setAllCategories])
 
     const categories = () => allCategories.map((category: Category) =>
-        <MenuItem value={category.categoryId}>{category.name}</MenuItem>)
+        <MenuItem key={category.categoryId} value={category.categoryId}>{category.name}</MenuItem>)
 
     const handleCategory = (event: SelectChangeEvent) => {
         setValues({ ...values, categoryId: event.target.value })

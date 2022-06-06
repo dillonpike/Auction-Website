@@ -24,7 +24,7 @@ const AuctionPagination = (props: IPaginationProps) => {
     }
 
     const countPerPageOptions = () =>
-        [5,6,7,8,9,10].map((num: number) => <MenuItem value={num}>{num}</MenuItem>)
+        [5,6,7,8,9,10].map((num: number) => <MenuItem key={num} value={num}>{num}</MenuItem>)
 
     const box: CSS.Properties = {
         display: "flex",
