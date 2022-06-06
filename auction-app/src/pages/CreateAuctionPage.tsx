@@ -102,7 +102,7 @@ const CreateAuctionPage = (props: ISnackProps) => {
                             reserve: response.data.reserve, categoryId: response.data.categoryId,
                             endDate: response.data.endDate.replace('Z', '').replace('T', ' '),
                             image: imageResponse.data })
-                        setEndDate(response.data.endDate)
+                        setEndDate(new Date(response.data.endDate))
                         setImageUrl(`http://localhost:4941/api/v1/auctions/${id}/image`)
                     }, (error) => {
                         props.handleSnackError("Failed to load details")
@@ -147,6 +147,8 @@ const CreateAuctionPage = (props: ISnackProps) => {
         setEndDate(date);
         if (date !== null) {
             try {
+                date.setTime(date.getTime() + 12 * 60 * 60 * 1000)
+                console.log(date)
                 setValues({...values, endDate: date.toISOString().replace('Z', '').replace('T', ' ')})
             } catch {}
         }
@@ -194,10 +196,16 @@ const CreateAuctionPage = (props: ISnackProps) => {
 
     const handleCreate = () => {
         if (checkInput()) {
+            let date = null
+            if (endDate === null) {
+                date = add(new Date(),{days: 7, hours: 12}).toISOString().replace('Z', '').replace('T', ' ')
+            } else {
+                date = new Date(endDate.getTime() + 12 * 60 * 60 * 1000).toISOString().replace('Z', '').replace('T', ' ')
+            }
             axios.post('http://localhost:4941/api/v1/auctions',
                 {
                     title: values.title, description: values.description, categoryId: parseInt(values.categoryId, 10),
-                    endDate: values.endDate, reserve: values.reserve.toString() === "" ? 1 : values.reserve
+                    endDate: date, reserve: values.reserve.toString() === "" ? 1 : values.reserve
                 }, {headers: {'X-Authorization': `${Cookies.get('token')}`}})
                 .then((response) => {
                     editAuctionImage(response.data.auctionId, values.image)
@@ -216,7 +224,13 @@ const CreateAuctionPage = (props: ISnackProps) => {
 
     const handleEdit = () => {
         if (checkInput() && id !== undefined) {
-            editAuction(id, values.title, values.description, parseInt(values.categoryId, 10), values.endDate,
+            let date = null
+            if (endDate === null) {
+                date = add(new Date(),{days: 7, hours: 12}).toISOString().replace('Z', '').replace('T', ' ')
+            } else {
+                date = new Date(endDate.getTime() + 12 * 60 * 60 * 1000).toISOString().replace('Z', '').replace('T', ' ')
+            }
+            editAuction(id, values.title, values.description, parseInt(values.categoryId, 10), date,
                 values.reserve.toString() === "" ? 1 : values.reserve)
                 .then((response) => {
                     if (values.image.type !== undefined) {
